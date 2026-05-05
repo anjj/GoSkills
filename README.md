@@ -1,9 +1,6 @@
-<div align="center">
-  
-![GoSkills-banner](./goskills-bannet-github.png)
+# GoSkills
 
-</div>
-
+## Product Explained
 GoSkills is a complete, modern Learning Management System (LMS) and video course platform. It is designed to provide users with a clean, intuitive dashboard to explore and consume video courses on various topics, such as AI tools and programming languages.
 
 The platform includes a robust **Admin Panel** that allows administrators to:
@@ -13,7 +10,7 @@ The platform includes a robust **Admin Panel** that allows administrators to:
 - Stream content securely using S3 Presigned URLs, protecting video assets from unauthorized direct access.
 
 ### Dashboard Overview
-![GoSkills Dashboard](./goskills-example.png)
+![GoSkills Dashboard](./screenshot.png)
 
 ## Setup Instructions
 
@@ -37,6 +34,16 @@ ADMIN_ACCESS="your_secure_password"
 
 # Restrict Access to specific Email Domains (Comma-separated)
 ALLOW_DOMAINS="gmail.com,yourcompany.com"
+
+# Firebase Configuration
+VITE_FIREBASE_PROJECT_ID="your_firebase_project_id"
+VITE_FIREBASE_APP_ID="your_firebase_app_id"
+VITE_FIREBASE_API_KEY="your_firebase_api_key"
+VITE_FIREBASE_AUTH_DOMAIN="your_firebase_auth_domain"
+VITE_FIREBASE_FIRESTORE_DATABASE_ID="your_firebase_firestore_database_id"
+VITE_FIREBASE_STORAGE_BUCKET="your_firebase_storage_bucket"
+VITE_FIREBASE_MESSAGING_SENDER_ID="your_firebase_messaging_sender_id"
+VITE_FIREBASE_MEASUREMENT_ID="your_firebase_measurement_id"
 ```
 
 ### 3. AWS S3 CORS Configuration
