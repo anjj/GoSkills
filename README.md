@@ -1,6 +1,9 @@
-# GoSkills
+<div align="center">
+  
+![GoSkills-banner](./goskills-bannet-github.png)
 
-## Product Explained
+</div>
+
 GoSkills is a complete, modern Learning Management System (LMS) and video course platform. It is designed to provide users with a clean, intuitive dashboard to explore and consume video courses on various topics, such as AI tools and programming languages.
 
 The platform includes a robust **Admin Panel** that allows administrators to:
@@ -10,7 +13,7 @@ The platform includes a robust **Admin Panel** that allows administrators to:
 - Stream content securely using S3 Presigned URLs, protecting video assets from unauthorized direct access.
 
 ### Dashboard Overview
-![GoSkills Dashboard](./screenshot.png)
+![GoSkills Dashboard](./goskills-example.png)
 
 ## Setup Instructions
 
