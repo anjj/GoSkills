@@ -1,0 +1,9 @@
+{
+  "name": "GoSkills MVP",
+  "description": "Plataforma de aprendizaje interna minimalista GoSkills para píldoras de conocimiento en video.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "video_player",
+    "learning_management"
+  ]
+}

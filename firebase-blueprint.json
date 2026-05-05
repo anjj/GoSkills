@@ -1,0 +1,56 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Public profile of a user.",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string", "description": "User's display name." },
+        "email": { "type": "string", "format": "email", "description": "User's email." },
+        "photoURL": { "type": "string", "description": "User's profile photo URL." },
+        "lastSeen": { "type": "string", "format": "date-time", "description": "Last time user was active." }
+      },
+      "required": ["email"]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "A learning course containing a video.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Course title." },
+        "description": { "type": "string", "description": "Course description." },
+        "thumbnailUrl": { "type": "string", "description": "URL of the course thumbnail image." },
+        "duration": { "type": "string", "description": "Estimated duration (e.g., '10 min')." },
+        "category": { "type": "string", "description": "Course category (e.g., 'Ventas', 'Onboarding')." },
+        "chapters": { "type": "array", "description": "List of chapters with video and text." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp." }
+      },
+      "required": ["title", "category", "chapters"]
+    },
+    "Progress": {
+      "title": "Progress",
+      "description": "User's progress on a specific course.",
+      "type": "object",
+      "properties": {
+        "courseId": { "type": "string", "description": "ID of the course." },
+        "completed": { "type": "boolean", "description": "Whether the course is completed." },
+        "completedAt": { "type": "string", "format": "date-time", "description": "When the course was completed." }
+      },
+      "required": ["courseId", "completed"]
+    }
+  },
+  "firestore": {
+    "users": {
+      "schema": "User",
+      "description": "User profiles."
+    },
+    "courses": {
+      "schema": "Course",
+      "description": "List of available courses."
+    },
+    "users/{userId}/progress": {
+      "schema": "Progress",
+      "description": "User-specific course completion data."
+    }
+  }
+}
