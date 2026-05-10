@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Express } from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -12,10 +12,8 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
-async function startServer() {
+export function createApp(): Express {
   const app = express();
-  const PORT = 3000;
 
   app.use(express.json());
 
@@ -152,6 +150,13 @@ async function startServer() {
     }
   });
 
+  return app;
+}
+
+async function startServer() {
+  const app = createApp();
+  const PORT = 3000;
+
   // Vite integration
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -172,4 +177,11 @@ async function startServer() {
   });
 }
 
-startServer();
+const isDirectRun =
+  typeof process !== "undefined" &&
+  process.argv[1] &&
+  fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
+
+if (isDirectRun) {
+  startServer();
+}
