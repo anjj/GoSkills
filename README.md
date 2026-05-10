@@ -1,5 +1,7 @@
 # GoSkills
 
+![Coverage](https://img.shields.io/badge/coverage-84%25-brightgreen) ![Tests](https://img.shields.io/badge/tests-97%20passed-brightgreen)
+
 ## Product Explained
 GoSkills is a complete, modern Learning Management System (LMS) and video course platform. It is designed to provide users with a clean, intuitive dashboard to explore and consume video courses on various topics, such as AI tools and programming languages.
 
@@ -85,3 +87,29 @@ This project uses Vite and a Node.js Express server to handle API routes like th
 - **Backend Setup:** Node.js, Express, Vite
 - **Storage:** AWS S3 (Integration via `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner`)
 - **Database & Identity:** Firebase (Firestore & Auth)
+- **Testing:** Vitest, React Testing Library, Supertest
+
+## Testing
+
+The project ships with a Vitest-based test suite covering both the Express API
+and the React frontend (with mocked Firebase, AWS, and XHR layers).
+
+```bash
+# Run the test suite once
+npm test
+
+# Run in watch mode while developing
+npm run test:watch
+
+# Generate the coverage report (HTML output in ./coverage)
+npm run test:coverage
+```
+
+Current coverage (v8 provider):
+
+| Metric     | Coverage |
+|------------|---------:|
+| Statements |   83.02% |
+| Branches   |   82.52% |
+| Functions  |   78.19% |
+| Lines      |   84.15% |
