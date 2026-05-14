@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
-const { mocks } = vi.hoisted(() => ({
+const { mocks, trackCourseViewMock } = vi.hoisted(() => ({
   mocks: {
     onSnapshot: vi.fn(),
     handleFirestoreError: vi.fn(),
   },
+  trackCourseViewMock: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('firebase/firestore', () => ({
@@ -21,7 +22,7 @@ vi.mock('../src/lib/firebase', () => ({
   OperationType: {
     LIST: 'list',
   },
-  trackCourseView: vi.fn().mockResolvedValue(undefined),
+  trackCourseView: (...args: any[]) => trackCourseViewMock(...args),
 }));
 
 import Dashboard from '../src/components/Dashboard';
@@ -63,6 +64,8 @@ function makeSnapshot(courses: any[]) {
 beforeEach(() => {
   mocks.onSnapshot.mockReset();
   mocks.handleFirestoreError.mockReset();
+  trackCourseViewMock.mockReset();
+  trackCourseViewMock.mockResolvedValue(undefined);
 });
 
 describe('Dashboard', () => {
@@ -95,6 +98,28 @@ describe('Dashboard', () => {
     fireEvent.click(screen.getByText('React Basics'));
     expect(onPlay).toHaveBeenCalledTimes(1);
     expect(onPlay.mock.calls[0][0].id).toBe('1');
+  });
+
+  it('calls trackCourseView with the course id when opening a published course', async () => {
+    mocks.onSnapshot.mockImplementation((_q, _opts, onNext) => {
+      onNext(makeSnapshot(sampleCourses));
+      return () => {};
+    });
+    render(<Dashboard onPlay={vi.fn()} />);
+    await waitFor(() => screen.getByText('React Basics'));
+    fireEvent.click(screen.getByText('React Basics'));
+    expect(trackCourseViewMock).toHaveBeenCalledWith('1');
+  });
+
+  it('does not call trackCourseView for unpublished courses', async () => {
+    mocks.onSnapshot.mockImplementation((_q, _opts, onNext) => {
+      onNext(makeSnapshot(sampleCourses));
+      return () => {};
+    });
+    render(<Dashboard onPlay={vi.fn()} />);
+    await waitFor(() => screen.getByText('Sales 101'));
+    fireEvent.click(screen.getByText('Sales 101'));
+    expect(trackCourseViewMock).not.toHaveBeenCalled();
   });
 
   it('does not call onPlay when clicking an unpublished course', async () => {

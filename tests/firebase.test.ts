@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { mockedAuth } = vi.hoisted(() => ({
+const { mockedAuth, mockTransaction } = vi.hoisted(() => ({
   mockedAuth: { currentUser: null as any },
+  mockTransaction: {
+    get: vi.fn(),
+    set: vi.fn(),
+  },
 }));
 
 vi.mock('firebase/app', () => ({
@@ -19,8 +23,12 @@ vi.mock('firebase/auth', () => ({
 
 vi.mock('firebase/firestore', () => ({
   getFirestore: vi.fn(() => ({})),
-  doc: vi.fn(() => ({})),
+  doc: vi.fn((_db: any, ...segments: string[]) => ({ path: segments.join('/') })),
   getDocFromServer: vi.fn(() => Promise.resolve({})),
+  runTransaction: vi.fn((_db: any, fn: (tx: any) => Promise<any>) => fn(mockTransaction)),
+  setDoc: vi.fn(() => Promise.resolve()),
+  increment: vi.fn((n: number) => ({ __increment: n })),
+  serverTimestamp: vi.fn(() => ({ __serverTimestamp: true })),
 }));
 
 vi.mock('firebase/storage', () => ({
@@ -36,8 +44,12 @@ import {
   auth,
   storage,
   googleProvider,
+  trackCourseView,
+  trackChapterView,
+  trackCourseCompletion,
 } from '../src/lib/firebase';
-import { signInWithPopup, signOut } from 'firebase/auth';
+import { signInWithPopup, signOut, runTransaction, setDoc } from 'firebase/auth';
+import { runTransaction as firestoreRunTransaction, setDoc as firestoreSetDoc } from 'firebase/firestore';
 
 beforeEach(() => {
   mockedAuth.currentUser = null;
@@ -137,6 +149,125 @@ describe('logout', () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     (signOut as any).mockRejectedValueOnce(new Error('network'));
     await expect(logout()).rejects.toThrow('network');
+    errorSpy.mockRestore();
+  });
+});
+
+describe('trackCourseView', () => {
+  beforeEach(() => {
+    mockTransaction.get.mockReset();
+    mockTransaction.set.mockReset();
+    (firestoreRunTransaction as any).mockClear();
+  });
+
+  it('does nothing when no user is logged in', async () => {
+    mockedAuth.currentUser = null;
+    await trackCourseView('course1');
+    expect(firestoreRunTransaction).not.toHaveBeenCalled();
+  });
+
+  it('runs a transaction and increments views and uniqueViewers on first view', async () => {
+    mockedAuth.currentUser = { uid: 'user-1' };
+    mockTransaction.get.mockResolvedValueOnce({ exists: () => false });
+
+    await trackCourseView('course1');
+
+    expect(firestoreRunTransaction).toHaveBeenCalledOnce();
+    // First set creates the viewer doc
+    expect(mockTransaction.set).toHaveBeenCalledTimes(2);
+    const statsCall = mockTransaction.set.mock.calls.find(
+      (c: any[]) => c[1]?.uniqueViewers !== undefined
+    );
+    expect(statsCall).toBeTruthy();
+    expect(statsCall[1].views).toMatchObject({ __increment: 1 });
+    expect(statsCall[1].uniqueViewers).toMatchObject({ __increment: 1 });
+  });
+
+  it('only increments views (not uniqueViewers) on repeat view', async () => {
+    mockedAuth.currentUser = { uid: 'user-1' };
+    mockTransaction.get.mockResolvedValueOnce({ exists: () => true });
+
+    await trackCourseView('course1');
+
+    const statsCall = mockTransaction.set.mock.calls.find(
+      (c: any[]) => c[1]?.views !== undefined
+    );
+    expect(statsCall).toBeTruthy();
+    expect(statsCall[1].views).toMatchObject({ __increment: 1 });
+    expect(statsCall[1].uniqueViewers).toBeUndefined();
+  });
+
+  it('fails silently when the transaction throws', async () => {
+    mockedAuth.currentUser = { uid: 'user-1' };
+    (firestoreRunTransaction as any).mockRejectedValueOnce(new Error('tx fail'));
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await expect(trackCourseView('course1')).resolves.toBeUndefined();
+    expect(errorSpy).toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+});
+
+describe('trackChapterView', () => {
+  beforeEach(() => {
+    (firestoreSetDoc as any).mockClear();
+  });
+
+  it('does nothing when no user is logged in', async () => {
+    mockedAuth.currentUser = null;
+    await trackChapterView('course1', 'ch1');
+    expect(firestoreSetDoc).not.toHaveBeenCalled();
+  });
+
+  it('calls setDoc with an increment for the chapter', async () => {
+    mockedAuth.currentUser = { uid: 'user-1' };
+    await trackChapterView('course1', 'ch1');
+    expect(firestoreSetDoc).toHaveBeenCalledOnce();
+    const [, data, opts] = (firestoreSetDoc as any).mock.calls[0];
+    expect(data['chapterViews.ch1']).toMatchObject({ __increment: 1 });
+    expect(opts).toEqual({ merge: true });
+  });
+
+  it('fails silently when setDoc throws', async () => {
+    mockedAuth.currentUser = { uid: 'user-1' };
+    (firestoreSetDoc as any).mockRejectedValueOnce(new Error('write fail'));
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await expect(trackChapterView('course1', 'ch1')).resolves.toBeUndefined();
+    expect(errorSpy).toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+});
+
+describe('trackCourseCompletion', () => {
+  beforeEach(() => {
+    (firestoreSetDoc as any).mockClear();
+  });
+
+  it('does nothing when no user is logged in', async () => {
+    mockedAuth.currentUser = null;
+    await trackCourseCompletion('course1', true);
+    expect(firestoreSetDoc).not.toHaveBeenCalled();
+  });
+
+  it('increments completions when completed=true', async () => {
+    mockedAuth.currentUser = { uid: 'user-1' };
+    await trackCourseCompletion('course1', true);
+    const [, data] = (firestoreSetDoc as any).mock.calls[0];
+    expect(data.completions).toMatchObject({ __increment: 1 });
+  });
+
+  it('decrements completions when completed=false', async () => {
+    mockedAuth.currentUser = { uid: 'user-1' };
+    await trackCourseCompletion('course1', false);
+    const [, data] = (firestoreSetDoc as any).mock.calls[0];
+    expect(data.completions).toMatchObject({ __increment: -1 });
+  });
+
+  it('fails silently when setDoc throws', async () => {
+    mockedAuth.currentUser = { uid: 'user-1' };
+    (firestoreSetDoc as any).mockRejectedValueOnce(new Error('fail'));
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await expect(trackCourseCompletion('course1', true)).resolves.toBeUndefined();
+    expect(errorSpy).toHaveBeenCalled();
     errorSpy.mockRestore();
   });
 });

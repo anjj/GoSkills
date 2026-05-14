@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
-const { mocks } = vi.hoisted(() => ({
+const { mocks, trackChapterViewMock, trackCourseCompletionMock } = vi.hoisted(() => ({
   mocks: {
     setDoc: vi.fn(),
     getDoc: vi.fn(),
@@ -9,6 +9,8 @@ const { mocks } = vi.hoisted(() => ({
     fetchMock: vi.fn(),
     currentUser: { uid: 'user-1' } as any,
   },
+  trackChapterViewMock: vi.fn().mockResolvedValue(undefined),
+  trackCourseCompletionMock: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('firebase/firestore', () => ({
@@ -26,8 +28,8 @@ vi.mock('../src/lib/firebase', () => ({
   },
   handleFirestoreError: (...args: any[]) => mocks.handleFirestoreError(...args),
   OperationType: { WRITE: 'write' },
-  trackChapterView: vi.fn().mockResolvedValue(undefined),
-  trackCourseCompletion: vi.fn().mockResolvedValue(undefined),
+  trackChapterView: (...args: any[]) => trackChapterViewMock(...args),
+  trackCourseCompletion: (...args: any[]) => trackCourseCompletionMock(...args),
 }));
 
 import VideoPlayer from '../src/components/VideoPlayer';
@@ -54,6 +56,10 @@ beforeEach(() => {
   mocks.handleFirestoreError.mockReset();
   mocks.fetchMock.mockReset();
   mocks.currentUser = { uid: 'user-1' };
+  trackChapterViewMock.mockReset();
+  trackChapterViewMock.mockResolvedValue(undefined);
+  trackCourseCompletionMock.mockReset();
+  trackCourseCompletionMock.mockResolvedValue(undefined);
   mocks.getDoc.mockResolvedValue({ exists: () => false, data: () => ({}) });
   // @ts-ignore
   global.fetch = mocks.fetchMock;
@@ -112,6 +118,35 @@ describe('VideoPlayer', () => {
     const data = mocks.setDoc.mock.calls[0][1];
     expect(data.completed).toBe(true);
     expect(data.courseId).toBe('course-1');
+  });
+
+  it('calls trackChapterView with the course id and chapter id on mount', async () => {
+    render(<VideoPlayer course={sampleCourse} onBack={vi.fn()} />);
+    await waitFor(() => expect(trackChapterViewMock).toHaveBeenCalledWith('course-1', 'c1'));
+  });
+
+  it('calls trackChapterView again when switching to a different chapter', async () => {
+    render(<VideoPlayer course={sampleCourse} onBack={vi.fn()} />);
+    await waitFor(() => expect(trackChapterViewMock).toHaveBeenCalledWith('course-1', 'c1'));
+    trackChapterViewMock.mockClear();
+    fireEvent.click(screen.getByText('Second'));
+    await waitFor(() => expect(trackChapterViewMock).toHaveBeenCalledWith('course-1', 'c2'));
+  });
+
+  it('calls trackCourseCompletion with true when marking as complete', async () => {
+    mocks.setDoc.mockResolvedValueOnce(undefined);
+    render(<VideoPlayer course={sampleCourse} onBack={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /Finalizar Curso/i }));
+    await waitFor(() => expect(trackCourseCompletionMock).toHaveBeenCalledWith('course-1', true));
+  });
+
+  it('calls trackCourseCompletion with false when un-marking a completed course', async () => {
+    mocks.getDoc.mockResolvedValueOnce({ exists: () => true, data: () => ({ completed: true }) });
+    mocks.setDoc.mockResolvedValueOnce(undefined);
+    render(<VideoPlayer course={sampleCourse} onBack={vi.fn()} />);
+    await waitFor(() => screen.getByText(/Curso Completado/));
+    fireEvent.click(screen.getByRole('button', { name: /Curso Completado/i }));
+    await waitFor(() => expect(trackCourseCompletionMock).toHaveBeenCalledWith('course-1', false));
   });
 
   it('handles a setDoc error via handleFirestoreError', async () => {
