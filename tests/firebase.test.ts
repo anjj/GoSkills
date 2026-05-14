@@ -48,7 +48,7 @@ import {
   trackChapterView,
   trackCourseCompletion,
 } from '../src/lib/firebase';
-import { signInWithPopup, signOut, runTransaction, setDoc } from 'firebase/auth';
+import { signInWithPopup, signOut } from 'firebase/auth';
 import { runTransaction as firestoreRunTransaction, setDoc as firestoreSetDoc } from 'firebase/firestore';
 
 beforeEach(() => {
