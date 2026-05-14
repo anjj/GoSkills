@@ -21,6 +21,7 @@ vi.mock('../src/lib/firebase', () => ({
   OperationType: {
     LIST: 'list',
   },
+  trackCourseView: vi.fn().mockResolvedValue(undefined),
 }));
 
 import Dashboard from '../src/components/Dashboard';

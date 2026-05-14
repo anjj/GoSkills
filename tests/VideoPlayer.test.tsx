@@ -26,6 +26,8 @@ vi.mock('../src/lib/firebase', () => ({
   },
   handleFirestoreError: (...args: any[]) => mocks.handleFirestoreError(...args),
   OperationType: { WRITE: 'write' },
+  trackChapterView: vi.fn().mockResolvedValue(undefined),
+  trackCourseCompletion: vi.fn().mockResolvedValue(undefined),
 }));
 
 import VideoPlayer from '../src/components/VideoPlayer';

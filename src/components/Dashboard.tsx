@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { db, handleFirestoreError, OperationType, trackCourseView } from '../lib/firebase';
 import { Course } from '../types';
 import { Search, Clock, Tag } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -65,7 +65,7 @@ export default function Dashboard({ onPlay }: DashboardProps) {
             <motion.div
               layoutId={course.id}
               key={course.id}
-              onClick={() => course.published !== false ? onPlay(course) : null}
+              onClick={() => { if (course.published !== false) { trackCourseView(course.id); onPlay(course); } }}
               className={`bg-white rounded-lg overflow-hidden border border-gray-200 transition-all shadow-sm ${
                 course.published !== false 
                   ? 'hover:border-brand/30 hover:shadow-xl hover:shadow-brand/5 cursor-pointer group' 

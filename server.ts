@@ -1,4 +1,4 @@
-import express, { Express } from "express";
+import express, { Express, Request, Response, NextFunction } from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -6,11 +6,45 @@ import dotenv from "dotenv";
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import multer from "multer";
+import admin from "firebase-admin";
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+function getAdminDb(): admin.firestore.Firestore | null {
+  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
+  const projectId = process.env.VITE_FIREBASE_PROJECT_ID;
+
+  if (!serviceAccount && !projectId) return null;
+
+  try {
+    if (!admin.apps.length) {
+      const credential = serviceAccount
+        ? admin.credential.cert(JSON.parse(serviceAccount))
+        : admin.credential.applicationDefault();
+      admin.initializeApp({ credential, projectId: projectId || undefined });
+    }
+    return admin.firestore();
+  } catch (error) {
+    console.error("Failed to initialize Firebase Admin:", error);
+    return null;
+  }
+}
+
+function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  const password = req.headers["x-admin-password"] as string | undefined;
+  const adminPassword = process.env.ADMIN_ACCESS;
+
+  if (!adminPassword) {
+    return res.status(500).json({ error: "ADMIN_ACCESS not configured in server" });
+  }
+  if (!password || password !== adminPassword) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  next();
+}
 
 export function createApp(): Express {
   const app = express();
@@ -147,6 +181,117 @@ export function createApp(): Express {
     } catch (error) {
       console.error("Error generating read presigned URL:", error);
       res.status(500).json({ error: "Failed to generate presigned URL for video" });
+    }
+  });
+
+  // Stats API — admin-only
+  app.get("/api/stats", requireAdmin, async (req, res) => {
+    const db = getAdminDb();
+    if (!db) {
+      return res.status(500).json({ error: "Firebase Admin not configured. Set FIREBASE_SERVICE_ACCOUNT or VITE_FIREBASE_PROJECT_ID with Application Default Credentials." });
+    }
+
+    try {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      const [coursesSnap, courseStatsSnap, totalUsersSnap, active7dSnap, active30dSnap, completionsSnap] = await Promise.all([
+        db.collection("courses").get(),
+        db.collection("course_stats").get(),
+        db.collection("users").count().get(),
+        db.collection("users").where("lastSeen", ">=", sevenDaysAgo).count().get(),
+        db.collection("users").where("lastSeen", ">=", thirtyDaysAgo).count().get(),
+        db.collectionGroup("progress").where("completed", "==", true).get(),
+      ]);
+
+      const completionsByCourse: Record<string, number> = {};
+      for (const doc of completionsSnap.docs) {
+        const courseId = doc.data().courseId as string;
+        completionsByCourse[courseId] = (completionsByCourse[courseId] || 0) + 1;
+      }
+
+      const statsMap = new Map(courseStatsSnap.docs.map(d => [d.id, d.data()]));
+
+      const courses = coursesSnap.docs.map(d => {
+        const data = d.data();
+        const stats = statsMap.get(d.id) || {};
+        const views = (stats.views as number) || 0;
+        const uniqueViewers = (stats.uniqueViewers as number) || 0;
+        const completions = completionsByCourse[d.id] || 0;
+        return {
+          courseId: d.id,
+          title: data.title as string,
+          category: data.category as string,
+          published: data.published !== false,
+          views,
+          uniqueViewers,
+          completions,
+          completionRate: uniqueViewers > 0 ? Math.round((completions / uniqueViewers) * 100) : 0,
+        };
+      });
+
+      courses.sort((a, b) => b.views - a.views);
+
+      res.json({
+        totalUsers: totalUsersSnap.data().count,
+        activeUsers7d: active7dSnap.data().count,
+        activeUsers30d: active30dSnap.data().count,
+        totalCourses: coursesSnap.size,
+        publishedCourses: courses.filter(c => c.published).length,
+        totalViews: courses.reduce((sum, c) => sum + c.views, 0),
+        totalCompletions: completionsSnap.size,
+        courses,
+      });
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+      res.status(500).json({ error: "Failed to fetch statistics" });
+    }
+  });
+
+  app.get("/api/stats/courses/:courseId", requireAdmin, async (req, res) => {
+    const db = getAdminDb();
+    if (!db) {
+      return res.status(500).json({ error: "Firebase Admin not configured. Set FIREBASE_SERVICE_ACCOUNT or VITE_FIREBASE_PROJECT_ID with Application Default Credentials." });
+    }
+
+    const { courseId } = req.params;
+
+    try {
+      const [courseDoc, statsDoc, viewersSnap] = await Promise.all([
+        db.collection("courses").doc(courseId).get(),
+        db.collection("course_stats").doc(courseId).get(),
+        db.collection("course_stats").doc(courseId).collection("viewers").count().get(),
+      ]);
+
+      // Count completions for this course via collection group
+      const courseCompletionsSnap = await db.collectionGroup("progress")
+        .where("courseId", "==", courseId)
+        .where("completed", "==", true)
+        .get();
+
+      if (!courseDoc.exists) {
+        return res.status(404).json({ error: "Course not found" });
+      }
+
+      const courseData = courseDoc.data()!;
+      const statsData = statsDoc.exists ? statsDoc.data()! : {};
+      const uniqueViewers = viewersSnap.data().count;
+      const completions = courseCompletionsSnap.size;
+
+      res.json({
+        courseId,
+        title: courseData.title,
+        category: courseData.category,
+        published: courseData.published !== false,
+        views: (statsData.views as number) || 0,
+        uniqueViewers,
+        completions,
+        completionRate: uniqueViewers > 0 ? Math.round((completions / uniqueViewers) * 100) : 0,
+        chapterViews: (statsData.chapterViews as Record<string, number>) || {},
+      });
+    } catch (error) {
+      console.error("Error fetching course stats:", error);
+      res.status(500).json({ error: "Failed to fetch course statistics" });
     }
   });
 

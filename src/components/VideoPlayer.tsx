@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
+import { db, auth, handleFirestoreError, OperationType, trackChapterView, trackCourseCompletion } from '../lib/firebase';
 import { Course, Chapter, UserProgress } from '../types';
 import { ArrowLeft, CheckCircle, Clock, Play, Pause, Volume2, VolumeX, Maximize, Minimize, Check, ChevronRight, BookText } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -265,6 +265,11 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
     checkProgress();
   }, [course.id, chapters]);
 
+  useEffect(() => {
+    if (chapters.length === 0 || !currentChapter.id) return;
+    trackChapterView(course.id, currentChapter.id);
+  }, [course.id, currentChapter.id]);
+
   const toggleCourseComplete = async () => {
     if (!auth.currentUser || chapters.length === 0) return;
     setMarking(true);
@@ -277,6 +282,7 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
         completed: isNowCompleted,
         completedAt: isNowCompleted ? new Date().toISOString() : null
       });
+      trackCourseCompletion(course.id, isNowCompleted);
       setCompletedChapters(isNowCompleted ? chapters.map(c => c.id) : []);
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `users/${auth.currentUser.uid}/progress/${course.id}`);

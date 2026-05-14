@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { getFirestore, doc, getDocFromServer, runTransaction, setDoc, increment, serverTimestamp } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
@@ -76,6 +76,60 @@ export interface FirestoreErrorInfo {
       providerId?: string | null;
       email?: string | null;
     }[];
+  }
+}
+
+export async function trackCourseView(courseId: string): Promise<void> {
+  const userId = auth.currentUser?.uid;
+  if (!userId) return;
+
+  try {
+    const statsRef = doc(db, 'course_stats', courseId);
+    const viewerRef = doc(db, 'course_stats', courseId, 'viewers', userId);
+
+    await runTransaction(db, async (transaction) => {
+      const viewerSnap = await transaction.get(viewerRef);
+      const isFirstView = !viewerSnap.exists();
+
+      const updates: Record<string, any> = { views: increment(1), updatedAt: serverTimestamp() };
+      if (isFirstView) {
+        updates.uniqueViewers = increment(1);
+        transaction.set(viewerRef, { viewedAt: serverTimestamp() });
+      }
+      transaction.set(statsRef, updates, { merge: true });
+    });
+  } catch (error) {
+    console.error('Error tracking course view:', error);
+  }
+}
+
+export async function trackChapterView(courseId: string, chapterId: string): Promise<void> {
+  const userId = auth.currentUser?.uid;
+  if (!userId) return;
+
+  try {
+    const statsRef = doc(db, 'course_stats', courseId);
+    await setDoc(statsRef, {
+      [`chapterViews.${chapterId}`]: increment(1),
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+  } catch (error) {
+    console.error('Error tracking chapter view:', error);
+  }
+}
+
+export async function trackCourseCompletion(courseId: string, completed: boolean): Promise<void> {
+  const userId = auth.currentUser?.uid;
+  if (!userId) return;
+
+  try {
+    const statsRef = doc(db, 'course_stats', courseId);
+    await setDoc(statsRef, {
+      completions: increment(completed ? 1 : -1),
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+  } catch (error) {
+    console.error('Error tracking course completion:', error);
   }
 }
 

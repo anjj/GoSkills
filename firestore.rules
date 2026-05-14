@@ -92,5 +92,15 @@ service cloud.firestore {
     match /admins/{adminId} {
       allow read, write: if isAdmin();
     }
+
+    // 4. Course Stats Collection (written by clients, read by server via Admin SDK)
+    match /course_stats/{courseId} {
+      allow read: if isAdmin();
+      allow create, update: if isSignedIn();
+
+      match /viewers/{userId} {
+        allow read, create: if isOwner(userId);
+      }
+    }
   }
 }

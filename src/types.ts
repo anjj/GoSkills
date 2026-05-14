@@ -33,3 +33,33 @@ export interface UserProgress {
 
 export type Category = 'Ventas' | 'Operaciones' | 'Onboarding' | 'Tecnología' | 'RRHH';
 export const CATEGORIES: Category[] = ['Ventas', 'Operaciones', 'Onboarding', 'Tecnología', 'RRHH'];
+
+export interface CourseStats {
+  courseId: string;
+  views: number;
+  uniqueViewers: number;
+  chapterViews: Record<string, number>;
+  updatedAt: any;
+}
+
+export interface CourseStatsSummary {
+  courseId: string;
+  title: string;
+  category: string;
+  published: boolean;
+  views: number;
+  uniqueViewers: number;
+  completions: number;
+  completionRate: number;
+}
+
+export interface PlatformStats {
+  totalUsers: number;
+  activeUsers7d: number;
+  activeUsers30d: number;
+  totalCourses: number;
+  publishedCourses: number;
+  totalViews: number;
+  totalCompletions: number;
+  courses: CourseStatsSummary[];
+}

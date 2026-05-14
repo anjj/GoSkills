@@ -1,10 +1,20 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import request from 'supertest';
 
-const { sendMock, getSignedUrlMock } = vi.hoisted(() => ({
-  sendMock: vi.fn(),
-  getSignedUrlMock: vi.fn(),
-}));
+const { sendMock, getSignedUrlMock, firestoreMock } = vi.hoisted(() => {
+  const sendMock = vi.fn();
+  const getSignedUrlMock = vi.fn();
+
+  const makeCountResult = (count: number) => ({ data: () => ({ count }) });
+
+  const firestoreMock = {
+    collection: vi.fn(),
+    collectionGroup: vi.fn(),
+    _makeCountResult: makeCountResult,
+  };
+
+  return { sendMock, getSignedUrlMock, firestoreMock };
+});
 
 vi.mock('@aws-sdk/client-s3', () => {
   function S3Client(this: any) {
@@ -27,6 +37,18 @@ vi.mock('@aws-sdk/s3-request-presigner', () => ({
 
 vi.mock('vite', () => ({
   createServer: vi.fn(),
+}));
+
+vi.mock('firebase-admin', () => ({
+  default: {
+    get apps() { return []; },
+    initializeApp: vi.fn(),
+    credential: {
+      cert: vi.fn().mockReturnValue({}),
+      applicationDefault: vi.fn().mockReturnValue({}),
+    },
+    firestore: vi.fn(() => firestoreMock),
+  },
 }));
 
 import { createApp } from '../server';
@@ -258,5 +280,174 @@ describe('POST /api/video/presign', () => {
     expect(res.status).toBe(500);
     expect(res.body.error).toMatch(/Failed to generate presigned URL/);
     errorSpy.mockRestore();
+  });
+});
+
+// Helper: set up firestoreMock for stats tests
+function mockFirestoreForStats() {
+  const makeCountSnap = (count: number) => ({ data: () => ({ count }) });
+
+  const courseDocs: Record<string, any> = {
+    course1: { id: 'course1', exists: true, data: () => ({ title: 'React Basics', category: 'Tecnología', published: true }) },
+    course2: { id: 'course2', exists: true, data: () => ({ title: 'Sales 101', category: 'Ventas', published: false }) },
+  };
+  const courseStatsDocs: Record<string, any> = {
+    course1: { id: 'course1', exists: true, data: () => ({ views: 42, uniqueViewers: 10, chapterViews: { ch1: 30, ch2: 12 } }) },
+  };
+  const completions = [
+    { data: () => ({ courseId: 'course1', completed: true }) },
+    { data: () => ({ courseId: 'course1', completed: true }) },
+    { data: () => ({ courseId: 'course2', completed: true }) },
+  ];
+
+  const makeCollectionMock = (docs: any[]) => {
+    const col: any = {
+      get: vi.fn().mockResolvedValue({ docs, size: docs.length }),
+      where: vi.fn(),
+      count: vi.fn(),
+      doc: vi.fn(),
+    };
+    col.where.mockReturnValue(col);
+    col.count.mockReturnValue({ get: vi.fn().mockResolvedValue(makeCountSnap(docs.length)) });
+    return col;
+  };
+
+  firestoreMock.collection.mockImplementation((name: string) => {
+    if (name === 'courses') {
+      const col = makeCollectionMock(Object.values(courseDocs));
+      col.doc.mockImplementation((id: string) => ({
+        get: vi.fn().mockResolvedValue(courseDocs[id] ?? { exists: false }),
+      }));
+      return col;
+    }
+    if (name === 'course_stats') {
+      const col = makeCollectionMock([courseStatsDocs.course1]);
+      col.doc.mockImplementation((id: string) => ({
+        get: vi.fn().mockResolvedValue(courseStatsDocs[id] ?? { exists: false }),
+        collection: vi.fn(() => ({
+          count: vi.fn().mockReturnValue({ get: vi.fn().mockResolvedValue(makeCountSnap(10)) }),
+        })),
+      }));
+      return col;
+    }
+    if (name === 'users') {
+      const col = makeCollectionMock([{}, {}]);
+      col.count.mockReturnValue({ get: vi.fn().mockResolvedValue(makeCountSnap(50)) });
+      return col;
+    }
+    return makeCollectionMock([]);
+  });
+
+  firestoreMock.collectionGroup.mockImplementation((_name: string) => {
+    const activeFilters: { field: string; value: any }[] = [];
+    const groupMock: any = {
+      where: vi.fn((field: string, _op: string, value: any) => {
+        activeFilters.push({ field, value });
+        return groupMock;
+      }),
+      get: vi.fn(() => {
+        const filtered = completions.filter(doc =>
+          activeFilters.every(f => doc.data()[f.field] === f.value)
+        );
+        return Promise.resolve({ docs: filtered, size: filtered.length });
+      }),
+    };
+    return groupMock;
+  });
+}
+
+describe('GET /api/stats', () => {
+  beforeEach(() => {
+    process.env.ADMIN_ACCESS = 'secret';
+    process.env.VITE_FIREBASE_PROJECT_ID = 'test-project';
+  });
+
+  it('returns 401 when X-Admin-Password header is missing', async () => {
+    const app = createApp();
+    const res = await request(app).get('/api/stats');
+    expect(res.status).toBe(401);
+    expect(res.body.error).toBe('Unauthorized');
+  });
+
+  it('returns 401 when X-Admin-Password is wrong', async () => {
+    const app = createApp();
+    const res = await request(app).get('/api/stats').set('x-admin-password', 'wrong');
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 500 when ADMIN_ACCESS is not configured', async () => {
+    delete process.env.ADMIN_ACCESS;
+    const app = createApp();
+    const res = await request(app).get('/api/stats').set('x-admin-password', 'anything');
+    expect(res.status).toBe(500);
+    expect(res.body.error).toMatch(/ADMIN_ACCESS/);
+  });
+
+  it('returns 500 when Firebase Admin is not configured', async () => {
+    delete process.env.VITE_FIREBASE_PROJECT_ID;
+    delete process.env.FIREBASE_SERVICE_ACCOUNT;
+    const app = createApp();
+    const res = await request(app).get('/api/stats').set('x-admin-password', 'secret');
+    expect(res.status).toBe(500);
+    expect(res.body.error).toMatch(/Firebase Admin not configured/);
+  });
+
+  it('returns platform stats with course breakdown sorted by views', async () => {
+    mockFirestoreForStats();
+    const app = createApp();
+    const res = await request(app).get('/api/stats').set('x-admin-password', 'secret');
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      totalUsers: 50,
+      totalCourses: 2,
+      publishedCourses: 1,
+      totalCompletions: 3,
+    });
+    expect(res.body.courses).toHaveLength(2);
+    // Most viewed course first
+    expect(res.body.courses[0].courseId).toBe('course1');
+    expect(res.body.courses[0].views).toBe(42);
+    expect(res.body.courses[0].completions).toBe(2);
+  });
+});
+
+describe('GET /api/stats/courses/:courseId', () => {
+  beforeEach(() => {
+    process.env.ADMIN_ACCESS = 'secret';
+    process.env.VITE_FIREBASE_PROJECT_ID = 'test-project';
+  });
+
+  it('returns 401 when unauthenticated', async () => {
+    const app = createApp();
+    const res = await request(app).get('/api/stats/courses/course1');
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 404 when course does not exist', async () => {
+    mockFirestoreForStats();
+    const app = createApp();
+    const res = await request(app)
+      .get('/api/stats/courses/nonexistent')
+      .set('x-admin-password', 'secret');
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Course not found');
+  });
+
+  it('returns detailed course stats with chapter breakdown', async () => {
+    mockFirestoreForStats();
+    const app = createApp();
+    const res = await request(app)
+      .get('/api/stats/courses/course1')
+      .set('x-admin-password', 'secret');
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      courseId: 'course1',
+      title: 'React Basics',
+      views: 42,
+      uniqueViewers: 10,
+      completions: 2,
+      completionRate: 20,
+    });
+    expect(res.body.chapterViews).toEqual({ ch1: 30, ch2: 12 });
   });
 });
