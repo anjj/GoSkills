@@ -100,6 +100,15 @@ jobs:
           platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+            VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}
+            VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}
+            VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+            VITE_FIREBASE_FIRESTORE_DATABASE_ID=${{ secrets.VITE_FIREBASE_FIRESTORE_DATABASE_ID }}
+            VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+            VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+            VITE_FIREBASE_MEASUREMENT_ID=${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
 
   deploy-production:
     runs-on: ubuntu-latest
@@ -140,5 +149,12 @@ jobs:
         
         # Safe Environment Injection (Passes your secret values securely to Cloud Run at runtime)
         env_vars: |
-          FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
-          FIREBASE_DATABASE_URL=${{ secrets.FIREBASE_DATABASE_URL }}
+          ADMIN_ACCESS=${{ secrets.ADMIN_ACCESS }}
+          ALLOW_DOMAINS=${{ secrets.ALLOW_DOMAINS }}
+          AWS_REGION=${{ secrets.AWS_REGION }}
+          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
+          SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+          FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}
+          FIREBASE_DATABASE_URL=${{ secrets.VITE_FIREBASE_DATABASE_URL }}
