@@ -18,8 +18,6 @@ RUN npm ci --omit=dev && npm install tsx --no-save
 COPY --from=builder /app/dist ./dist
 COPY server.ts tsconfig.json ./
 
-EXPOSE 3000
-
 ENV NODE_ENV=production
 
 CMD ["npx", "tsx", "server.ts"]

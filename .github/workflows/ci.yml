@@ -60,27 +60,31 @@ jobs:
 
       - name: Authenticate to Google Cloud
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        id: auth
         uses: google-github-actions/auth@v2
         with:
+          token_format: 'access_token'
           workload_identity_provider: 'projects/${{ vars.GOOGLE_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
           service_account: ${{ vars.GOOGLE_SERVICE_ACCOUNT }}
           project_id: ${{ vars.GOOGLE_PROJECT_ID }}
 
-      - name: Set up Cloud SDK
+      - name: Log in to Google Artifact Registry
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: google-github-actions/setup-gcloud@v2
-
-      - name: Configure Docker for GAR
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: gcloud auth configure-docker ${{ vars.GOOGLE_REGION }}-docker.pkg.dev
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.GOOGLE_REGION }}-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
 
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
+        env:
+          GAR_IMAGE: ${{ format('{0}-docker.pkg.dev/{1}/{2}/go-skills', vars.GOOGLE_REGION, vars.GOOGLE_PROJECT_ID, vars.GOOGLE_ARTIFACT_REPO) }}
         with:
           images: |
             ghcr.io/${{ github.repository_owner }}/goskills
-            ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') && format('{0}-docker.pkg.dev/{1}/{2}/{3}', vars.GOOGLE_REGION, vars.GOOGLE_PROJECT_ID, vars.GOOGLE_ARTIFACT_REPO, 'go-skills') || '' }}
+            ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') && env.GAR_IMAGE || '' }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,prefix=main-,enable={{is_default_branch}}
@@ -136,6 +140,5 @@ jobs:
         
         # Safe Environment Injection (Passes your secret values securely to Cloud Run at runtime)
         env_vars: |
-          PORT=8080
           FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
           FIREBASE_DATABASE_URL=${{ secrets.FIREBASE_DATABASE_URL }}
