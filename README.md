@@ -1,115 +1,33 @@
 # GoSkills
 
-![Coverage](https://img.shields.io/badge/coverage-84%25-brightgreen) ![Tests](https://img.shields.io/badge/tests-97%20passed-brightgreen)
+A minimalist internal LMS for video-based knowledge pills.
 
-## Product Explained
-GoSkills is a complete, modern Learning Management System (LMS) and video course platform. It is designed to provide users with a clean, intuitive dashboard to explore and consume video courses on various topics, such as AI tools and programming languages.
+[![Tech Stack](https://img.shields.io/badge/Stack-React%20%7C%20Node.js%20%7C%20Firebase%20%7C%20AWS-blue)](#tech-stack)
+[![Documentation](https://img.shields.io/badge/Docs-RAG--Ready-green)](./docs/how-it-works.md)
 
-The platform includes a robust **Admin Panel** that allows administrators to:
-- Create and categorize new courses.
-- Manage course curriculums with multiple video chapters.
-- Securely upload video files directly to **AWS S3**.
-- Stream content securely using S3 Presigned URLs, protecting video assets from unauthorized direct access.
+## 📖 Documentation
+- [**How it Works**](./docs/how-it-works.md): High-level overview of the platform.
+- [**Business Rules**](./docs/business-rules.md): Logic, validations, and constraints.
+- [**Diagnostics**](./docs/diagnostics.md): Error mapping and troubleshooting guide.
 
-### Dashboard Overview
-![GoSkills Dashboard](./screenshot.png)
+## 🛠 Tech Stack
 
-## Setup Instructions
+| Category | Technology | Version |
+|----------|------------|---------|
+| **Frontend** | React | ^19.0.1 |
+| **Styling** | Tailwind CSS | ^4.1.14 |
+| **Runtime** | Node.js | v22 |
+| **Server** | Express | ^4.21.2 |
+| **Database** | Firebase Firestore | ^12.12.1 |
+| **Auth** | Firebase Auth | ^12.12.1 |
+| **Storage** | AWS S3 | ^3.1042.0 |
+| **Tooling** | Vite | ^6.2.3 |
 
-### 1. Prerequisites
-- Node.js installed.
-- An AWS Account with an S3 bucket configured for CORS (to allow video uploads and playback).
-- A Firebase project configured with Firestore and Authentication.
+## 🚀 Getting Started
 
-### 2. Required Secrets & Environment Variables
-To run properly, the application requires several environment variables. These should be configured in your deployment environment (like the Secrets panel in AI Studio) or stored in a `.env` file for local development.
+1. **Install:** `npm install`
+2. **Configure:** Copy `.env.example` to `.env` and fill in your secrets.
+3. **Run:** `npm run dev` (Starts Vite + Express server).
 
-```env
-# AWS Credentials for S3 Video Storage
-AWS_ACCESS_KEY_ID="your_aws_access_key"
-AWS_SECRET_ACCESS_KEY="your_aws_secret_key"
-AWS_REGION="your_aws_region"
-AWS_S3_BUCKET="your_bucket_name"
-
-# Admin Panel Access Password
-ADMIN_ACCESS="your_secure_password"
-
-# Restrict Access to specific Email Domains (Comma-separated)
-ALLOW_DOMAINS="gmail.com,yourcompany.com"
-
-# Firebase Configuration
-VITE_FIREBASE_PROJECT_ID="your_firebase_project_id"
-VITE_FIREBASE_APP_ID="your_firebase_app_id"
-VITE_FIREBASE_API_KEY="your_firebase_api_key"
-VITE_FIREBASE_AUTH_DOMAIN="your_firebase_auth_domain"
-VITE_FIREBASE_FIRESTORE_DATABASE_ID="your_firebase_firestore_database_id"
-VITE_FIREBASE_STORAGE_BUCKET="your_firebase_storage_bucket"
-VITE_FIREBASE_MESSAGING_SENDER_ID="your_firebase_messaging_sender_id"
-VITE_FIREBASE_MEASUREMENT_ID="your_firebase_measurement_id"
-```
-
-### 3. AWS S3 CORS Configuration
-To allow the platform to upload and read videos from your AWS S3 bucket, ensure your bucket's CORS (Cross-Origin Resource Sharing) policy is configured exactly as follows:
-
-```json
-[
-  {
-    "AllowedHeaders": ["*"],
-    "AllowedMethods": ["PUT", "POST", "GET"],
-    "AllowedOrigins": ["*"],
-    "ExposeHeaders": []
-  }
-]
-```
-
-### 4. Running the Project
-This project uses Vite and a Node.js Express server to handle API routes like the AWS S3 interactions.
-
-1. **Install Dependencies:**
-   ```bash
-   npm install
-   ```
-
-2. **Start the server:**
-   ```bash
-   npm run dev
-   ```
-   *The server runs on port 3000.*
-
-3. **Production Build:**
-   ```bash
-   npm run build
-   npm run start
-   ```
-
-## Key Technologies
-- **Frontend:** React, Tailwind CSS, Lucide Icons
-- **Backend Setup:** Node.js, Express, Vite
-- **Storage:** AWS S3 (Integration via `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner`)
-- **Database & Identity:** Firebase (Firestore & Auth)
-- **Testing:** Vitest, React Testing Library, Supertest
-
-## Testing
-
-The project ships with a Vitest-based test suite covering both the Express API
-and the React frontend (with mocked Firebase, AWS, and XHR layers).
-
-```bash
-# Run the test suite once
-npm test
-
-# Run in watch mode while developing
-npm run test:watch
-
-# Generate the coverage report (HTML output in ./coverage)
-npm run test:coverage
-```
-
-Current coverage (v8 provider):
-
-| Metric     | Coverage |
-|------------|---------:|
-| Statements |   83.02% |
-| Branches   |   82.52% |
-| Functions  |   78.19% |
-| Lines      |   84.15% |
+---
+Developed for **Golive**
