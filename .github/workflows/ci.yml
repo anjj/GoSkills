@@ -6,14 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  PROJECT_ID:  ${{ secrets.GOOGLE_PROJECT_ID }}
-  PROJECT_NUMBER: ${{ secrets.GOOGLE_PROJECT_NUMBER }}
-  REGION: ${{ secrets.GOOGLE_REGION }}
-  ARTIFACT_REPO: ${{ secrets.GOOGLE_ARTIFACT_REPO }}
-  SERVICE_NAME: 'go-skills'
-  SERVICE_ACCOUNT: ${{ secrets.GOOGLE_SERVICE_ACCOUNT }}
-
 jobs:
   test:
     name: Test
@@ -88,6 +80,14 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     needs: docker
+
+    env:
+      PROJECT_ID:  ${{ secrets.GOOGLE_PROJECT_ID }}
+      PROJECT_NUMBER: ${{ secrets.GOOGLE_PROJECT_NUMBER }}
+      REGION: ${{ secrets.GOOGLE_REGION }}
+      ARTIFACT_REPO: ${{ secrets.GOOGLE_ARTIFACT_REPO }}
+      SERVICE_NAME: 'go-skills'
+      SERVICE_ACCOUNT: ${{ secrets.GOOGLE_SERVICE_ACCOUNT }}
 
     permissions:
       contents: 'read'
