@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import { collectionGroup, getDocs, query, collection } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Course, CourseProgress } from '../types';
@@ -153,7 +153,7 @@ export default function AdminStats() {
   );
 }
 
-function StatCard({ icon, label, value }: { icon: React.ReactNode, label: string, value: string }) {
+function StatCard({ icon, label, value }: { icon: ReactNode, label: string, value: string }) {
   return (
     <motion.div
       whileHover={{ y: -2 }}
