@@ -11,13 +11,11 @@ The platform includes a robust **Admin Panel** that allows administrators to:
 - Securely upload video files directly to **AWS S3**.
 - Stream content securely using S3 Presigned URLs, protecting video assets from unauthorized direct access.
 
-### Dashboard Overview
-![GoSkills Dashboard](./screenshot.png)
-
 ## Setup Instructions
 
 ### 1. Prerequisites
 - Node.js installed.
+- [pnpm](https://pnpm.io/) installed (recommended over npm for more efficient, disk-space-friendly dependency management). Install it with `npm install -g pnpm`.
 - An AWS Account with an S3 bucket configured for CORS (to allow video uploads and playback).
 - A Firebase project configured with Firestore and Authentication.
 
@@ -67,19 +65,19 @@ This project uses Vite and a Node.js Express server to handle API routes like th
 
 1. **Install Dependencies:**
    ```bash
-   npm install
+   pnpm install
    ```
 
 2. **Start the server:**
    ```bash
-   npm run dev
+   pnpm dev
    ```
    *The server runs on port 3000.*
 
 3. **Production Build:**
    ```bash
-   npm run build
-   npm run start
+   pnpm build
+   pnpm start
    ```
 
 ## Key Technologies
@@ -96,13 +94,13 @@ and the React frontend (with mocked Firebase, AWS, and XHR layers).
 
 ```bash
 # Run the test suite once
-npm test
+pnpm test
 
 # Run in watch mode while developing
-npm run test:watch
+pnpm test:watch
 
 # Generate the coverage report (HTML output in ./coverage)
-npm run test:coverage
+pnpm test:coverage
 ```
 
 Current coverage (v8 provider):
