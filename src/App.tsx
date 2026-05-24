@@ -6,7 +6,7 @@
 import { useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth, signIn, logout } from './lib/firebase';
-import { LogIn, LogOut, LayoutDashboard, User as UserIcon, Settings, Search, CheckCircle, Clock, Plus, Menu, X } from 'lucide-react';
+import { LogIn, LogOut, LayoutDashboard, User as UserIcon, Settings, Search, CheckCircle, Clock, Plus, Menu, X, BarChart3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Dashboard from './components/Dashboard';
 import ProfileView from './components/ProfileView';
@@ -67,7 +67,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [adminView, setAdminView] = useState<'list' | 'create'>('list');
+  const [adminView, setAdminView] = useState<'list' | 'create' | 'stats'>('list');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
@@ -264,16 +264,28 @@ export default function App() {
                   label="Panel de Control" 
                 />
                 {isAdmin && (
-                   <NavItem 
-                   active={currentView === 'admin' && adminView === 'create'} 
-                   onClick={() => { 
-                     setCurrentView('admin'); 
-                     setAdminView('create');
-                     closeMenu(); 
-                   }}
-                   icon={<Plus size={20} />} 
-                   label="Crear Nuevo Curso" 
-                 />
+                  <>
+                    <NavItem
+                      active={currentView === 'admin' && adminView === 'create'}
+                      onClick={() => {
+                        setCurrentView('admin');
+                        setAdminView('create');
+                        closeMenu();
+                      }}
+                      icon={<Plus size={20} />}
+                      label="Crear Nuevo Curso"
+                    />
+                    <NavItem
+                      active={currentView === 'admin' && adminView === 'stats'}
+                      onClick={() => {
+                        setCurrentView('admin');
+                        setAdminView('stats');
+                        closeMenu();
+                      }}
+                      icon={<BarChart3 size={20} />}
+                      label="Estadísticas"
+                    />
+                  </>
                 )}
               </nav>
 
