@@ -55,14 +55,13 @@ service cloud.firestore {
       }
 
       match /progress/{courseId} {
-        allow read: if isOwner(userId);
-        allow write: if isOwner(userId) && isValidProgress(incoming());
+        allow read: if isOwner(userId) || isAdmin();
+        allow write: if false;   // server-only via Admin SDK
+      }
 
-        function isValidProgress(data) {
-          return data.courseId is string && data.courseId.size() <= 128
-                 && data.completed is bool
-                 && (!('completedAt' in data) || (data.completedAt is string));
-        }
+      match /chapterCompletions/{chapterId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow write: if false;   // server-only via Admin SDK
       }
     }
 
