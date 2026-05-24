@@ -1,3 +1,5 @@
+import type { Timestamp } from 'firebase/firestore';
+
 export interface Chapter {
   id: string;
   title: string;
@@ -25,11 +27,20 @@ export interface UserProfile {
   lastSeen: string;
 }
 
-export interface UserProgress {
+export type ChapterCompletion = {
+  chapterId: string;
+  courseId: string; // denormalized for queries
+  completedAt: Timestamp;
+};
+
+export type CourseProgressStatus = 'in_progress' | 'completed';
+
+export type CourseProgress = {
   courseId: string;
-  completed: boolean;
-  completedAt?: string;
-}
+  status: CourseProgressStatus; // replaces `completed: boolean`
+  startedAt: Timestamp; // new
+  completedAt?: Timestamp; // tightened from string
+};
 
 export type Category = 'Ventas' | 'Operaciones' | 'Onboarding' | 'Tecnología' | 'RRHH';
 export const CATEGORIES: Category[] = ['Ventas', 'Operaciones', 'Onboarding', 'Tecnología', 'RRHH'];

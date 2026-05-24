@@ -3,18 +3,18 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 const { mocks } = vi.hoisted(() => ({
   mocks: {
-    setDoc: vi.fn(),
-    getDoc: vi.fn(),
-    handleFirestoreError: vi.fn(),
+    getDocs: vi.fn(),
     fetchMock: vi.fn(),
+    getIdToken: vi.fn(),
     currentUser: { uid: 'user-1' } as any,
   },
 }));
 
 vi.mock('firebase/firestore', () => ({
-  doc: vi.fn(() => ({})),
-  setDoc: (...args: any[]) => mocks.setDoc(...args),
-  getDoc: (...args: any[]) => mocks.getDoc(...args),
+  collection: vi.fn(() => ({})),
+  query: vi.fn((c: any) => c),
+  where: vi.fn(() => ({})),
+  getDocs: (...args: any[]) => mocks.getDocs(...args),
 }));
 
 vi.mock('../src/lib/firebase', () => ({
@@ -24,8 +24,6 @@ vi.mock('../src/lib/firebase', () => ({
       return mocks.currentUser;
     },
   },
-  handleFirestoreError: (...args: any[]) => mocks.handleFirestoreError(...args),
-  OperationType: { WRITE: 'write' },
 }));
 
 import VideoPlayer from '../src/components/VideoPlayer';
@@ -47,12 +45,12 @@ const sampleCourse = {
 };
 
 beforeEach(() => {
-  mocks.setDoc.mockReset();
-  mocks.getDoc.mockReset();
-  mocks.handleFirestoreError.mockReset();
+  mocks.getDocs.mockReset();
   mocks.fetchMock.mockReset();
-  mocks.currentUser = { uid: 'user-1' };
-  mocks.getDoc.mockResolvedValue({ exists: () => false, data: () => ({}) });
+  mocks.getIdToken.mockReset();
+  mocks.getIdToken.mockResolvedValue('token-abc');
+  mocks.currentUser = { uid: 'user-1', getIdToken: mocks.getIdToken };
+  mocks.getDocs.mockResolvedValue({ docs: [] });
   // @ts-ignore
   global.fetch = mocks.fetchMock;
   mocks.fetchMock.mockResolvedValue({
@@ -102,43 +100,56 @@ describe('VideoPlayer', () => {
     );
   });
 
-  it('marks the course as completed', async () => {
-    mocks.setDoc.mockResolvedValueOnce(undefined);
+  it('auto-marks a chapter when its video ends', async () => {
     render(<VideoPlayer course={sampleCourse} onBack={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: /Finalizar Curso/i }));
-    await waitFor(() => expect(mocks.setDoc).toHaveBeenCalled());
-    const data = mocks.setDoc.mock.calls[0][1];
-    expect(data.completed).toBe(true);
-    expect(data.courseId).toBe('course-1');
+    const video = await waitFor(() => document.querySelector('video')!);
+    fireEvent.ended(video);
+
+    await waitFor(() =>
+      expect(
+        mocks.fetchMock.mock.calls.find((c) => c[0] === '/api/progress/chapter-completed')
+      ).toBeTruthy()
+    );
+    const call = mocks.fetchMock.mock.calls.find((c) => c[0] === '/api/progress/chapter-completed')!;
+    const body = JSON.parse(call[1].body);
+    expect(body.courseId).toBe('course-1');
+    expect(body.chapterId).toBe('c1');
+    expect(call[1].headers.Authorization).toBe('Bearer token-abc');
   });
 
-  it('handles a setDoc error via handleFirestoreError', async () => {
-    mocks.setDoc.mockRejectedValueOnce(new Error('forbidden'));
-    mocks.handleFirestoreError.mockImplementation(() => {});
+  it('logs an error when the completion request is rejected', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     render(<VideoPlayer course={sampleCourse} onBack={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: /Finalizar Curso/i }));
-    await waitFor(() => expect(mocks.handleFirestoreError).toHaveBeenCalled());
+    const video = await waitFor(() => document.querySelector('video')!);
+    mocks.fetchMock.mockResolvedValueOnce({ ok: false, status: 403 });
+    fireEvent.ended(video);
+    await waitFor(() => expect(errorSpy).toHaveBeenCalled());
+    errorSpy.mockRestore();
   });
 
   it('reflects already-completed progress on mount', async () => {
-    mocks.getDoc.mockResolvedValueOnce({
-      exists: () => true,
-      data: () => ({ completed: true }),
+    mocks.getDocs.mockResolvedValueOnce({
+      docs: sampleCourse.chapters.map((c) => ({
+        data: () => ({ chapterId: c.id, courseId: 'course-1' }),
+      })),
     });
     render(<VideoPlayer course={sampleCourse} onBack={vi.fn()} />);
     await waitFor(() => expect(screen.getByText(/Curso Completado/)).toBeInTheDocument());
   });
 
-  it('does nothing when there is no current user', async () => {
+  it('does not record completion when there is no current user', async () => {
     mocks.currentUser = null;
     render(<VideoPlayer course={sampleCourse} onBack={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: /Finalizar Curso/i }));
-    expect(mocks.setDoc).not.toHaveBeenCalled();
+    const video = await waitFor(() => document.querySelector('video')!);
+    fireEvent.ended(video);
+    expect(
+      mocks.fetchMock.mock.calls.find((c) => c[0] === '/api/progress/chapter-completed')
+    ).toBeUndefined();
   });
 
-  it('handles getDoc errors silently', async () => {
+  it('handles progress-load errors silently', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    mocks.getDoc.mockRejectedValueOnce(new Error('blocked'));
+    mocks.getDocs.mockRejectedValueOnce(new Error('blocked'));
     render(<VideoPlayer course={sampleCourse} onBack={vi.fn()} />);
     await waitFor(() => expect(errorSpy).toHaveBeenCalled());
     errorSpy.mockRestore();

@@ -1,7 +1,7 @@
 import { useState, useEffect, ReactNode } from 'react';
 import { collection, query, getDocs, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { Course, UserProgress } from '../types';
+import { Course } from '../types';
 import { CheckCircle, Clock, BookOpen, Award, BarChart3 } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -24,7 +24,7 @@ export default function ProfileView({ userId }: ProfileViewProps) {
       const progressQuery = collection(db, 'users', userId, 'progress');
       const unsubscribe = onSnapshot(progressQuery, (snapshot) => {
         const completedIds = snapshot.docs
-          .filter(d => d.data().completed)
+          .filter(d => d.data().status === 'completed')
           .map(d => d.id);
 
         const completed = allCourses.filter(c => completedIds.includes(c.id));

@@ -6,11 +6,42 @@ import dotenv from "dotenv";
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import multer from "multer";
+import { initializeApp, cert, applicationDefault, getApps, type App } from "firebase-admin/app";
+import { getFirestore, FieldValue, type Firestore } from "firebase-admin/firestore";
+import { getAuth, type Auth } from "firebase-admin/auth";
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+let adminApp: App | null = null;
+
+// Lazily initialise firebase-admin so importing this module (e.g. in tests, or
+// before credentials are configured) has no side effects.
+function getAdminApp(): App {
+  if (adminApp) return adminApp;
+  if (getApps().length) {
+    adminApp = getApps()[0];
+    return adminApp;
+  }
+  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
+  adminApp = initializeApp(
+    serviceAccount
+      ? { credential: cert(JSON.parse(serviceAccount)) }
+      : { credential: applicationDefault() }
+  );
+  return adminApp;
+}
+
+function getAdminDb(): Firestore {
+  const databaseId = process.env.FIREBASE_FIRESTORE_DATABASE_ID;
+  return databaseId ? getFirestore(getAdminApp(), databaseId) : getFirestore(getAdminApp());
+}
+
+function getAdminAuth(): Auth {
+  return getAuth(getAdminApp());
+}
 
 export function createApp(): Express {
   const app = express();
@@ -147,6 +178,93 @@ export function createApp(): Express {
     } catch (error) {
       console.error("Error generating read presigned URL:", error);
       res.status(500).json({ error: "Failed to generate presigned URL for video" });
+    }
+  });
+
+  // API Route to record that a user finished a chapter's video.
+  // The userId is taken from the verified Firebase ID token, never from the body.
+  app.post("/api/progress/chapter-completed", async (req, res) => {
+    const authHeader = req.headers.authorization || "";
+    const match = authHeader.match(/^Bearer (.+)$/);
+    if (!match) {
+      return res.status(401).json({ error: "missing_token" });
+    }
+    const idToken = match[1];
+
+    const { courseId, chapterId } = req.body ?? {};
+    if (typeof courseId !== "string" || !courseId || typeof chapterId !== "string" || !chapterId) {
+      return res.status(400).json({ error: "invalid_body" });
+    }
+
+    let userId: string;
+    try {
+      const decoded = await getAdminAuth().verifyIdToken(idToken);
+      userId = decoded.uid;
+    } catch {
+      return res.status(401).json({ error: "invalid_token" });
+    }
+
+    try {
+      const db = getAdminDb();
+      const result = await db.runTransaction(async (tx) => {
+        const courseRef = db.doc(`courses/${courseId}`);
+        const progressRef = db.doc(`users/${userId}/progress/${courseId}`);
+        const chapterRef = db.doc(`users/${userId}/chapterCompletions/${chapterId}`);
+
+        const [courseSnap, progressSnap, chapterSnap] = await Promise.all([
+          tx.get(courseRef),
+          tx.get(progressRef),
+          tx.get(chapterRef),
+        ]);
+        if (!courseSnap.exists) throw new Error("course_not_found");
+
+        const chapters: { id: string }[] = courseSnap.get("chapters") ?? [];
+        if (!chapters.some((c) => c.id === chapterId)) throw new Error("chapter_not_in_course");
+
+        // Firestore transactions require all reads before any writes, so the
+        // count query runs here while the state is still pre-write. The
+        // `+ (chapterSnap.exists ? 0 : 1)` adjustment accounts for the chapter
+        // we are about to add (which the query cannot see yet).
+        const completedSnap = await tx.get(
+          db.collection(`users/${userId}/chapterCompletions`).where("courseId", "==", courseId)
+        );
+        const completedCount = completedSnap.size + (chapterSnap.exists ? 0 : 1);
+        const isCourseDone = completedCount >= chapters.length;
+
+        const now = FieldValue.serverTimestamp();
+
+        // 1. Idempotent leaf write
+        if (!chapterSnap.exists) {
+          tx.set(chapterRef, { chapterId, courseId, completedAt: now });
+        }
+
+        // 2. Upsert progress
+        if (!progressSnap.exists) {
+          tx.set(progressRef, {
+            courseId,
+            status: isCourseDone ? "completed" : "in_progress",
+            startedAt: now,
+            ...(isCourseDone ? { completedAt: now } : {}),
+          });
+        } else if (isCourseDone && progressSnap.get("status") !== "completed") {
+          tx.update(progressRef, { status: "completed", completedAt: now });
+        }
+
+        return {
+          status: isCourseDone ? "completed" : "in_progress",
+          completedCount,
+          totalChapters: chapters.length,
+        };
+      });
+
+      res.json({ success: true, ...result });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "unknown_error";
+      if (message === "course_not_found" || message === "chapter_not_in_course") {
+        return res.status(404).json({ error: message });
+      }
+      console.error("Error recording chapter completion:", error);
+      res.status(500).json({ error: "Failed to record chapter completion" });
     }
   });
 

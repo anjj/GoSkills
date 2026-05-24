@@ -41,9 +41,9 @@ function makeCoursesSnap(arr: any[]) {
   };
 }
 
-function makeProgressSnap(progress: { id: string; completed: boolean }[]) {
+function makeProgressSnap(progress: { id: string; status: string }[]) {
   return {
-    docs: progress.map((p) => ({ id: p.id, data: () => ({ completed: p.completed }) })),
+    docs: progress.map((p) => ({ id: p.id, data: () => ({ status: p.status }) })),
   };
 }
 
@@ -63,7 +63,7 @@ describe('ProfileView', () => {
   it('renders stats and course lists', async () => {
     mocks.getDocs.mockResolvedValue(makeCoursesSnap(sampleCourses));
     mocks.onSnapshot.mockImplementation((_q, onNext) => {
-      onNext(makeProgressSnap([{ id: 'a', completed: true }, { id: 'b', completed: false }]));
+      onNext(makeProgressSnap([{ id: 'a', status: 'completed' }, { id: 'b', status: 'in_progress' }]));
       return () => {};
     });
 

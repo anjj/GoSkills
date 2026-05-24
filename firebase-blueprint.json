@@ -29,14 +29,26 @@
     },
     "Progress": {
       "title": "Progress",
-      "description": "User's progress on a specific course.",
+      "description": "User's progress on a specific course. Written server-side via the Admin SDK.",
       "type": "object",
       "properties": {
         "courseId": { "type": "string", "description": "ID of the course." },
-        "completed": { "type": "boolean", "description": "Whether the course is completed." },
-        "completedAt": { "type": "string", "format": "date-time", "description": "When the course was completed." }
+        "status": { "type": "string", "enum": ["in_progress", "completed"], "description": "Course completion status." },
+        "startedAt": { "type": "string", "format": "date-time", "description": "When the user first finished a chapter of the course." },
+        "completedAt": { "type": "string", "format": "date-time", "description": "When all chapters were completed." }
       },
-      "required": ["courseId", "completed"]
+      "required": ["courseId", "status", "startedAt"]
+    },
+    "ChapterCompletion": {
+      "title": "ChapterCompletion",
+      "description": "Records that a user finished a single chapter's video. Written server-side via the Admin SDK.",
+      "type": "object",
+      "properties": {
+        "chapterId": { "type": "string", "description": "ID of the chapter." },
+        "courseId": { "type": "string", "description": "ID of the parent course (denormalized for queries)." },
+        "completedAt": { "type": "string", "format": "date-time", "description": "When the chapter was completed." }
+      },
+      "required": ["chapterId", "courseId", "completedAt"]
     }
   },
   "firestore": {
@@ -51,6 +63,10 @@
     "users/{userId}/progress": {
       "schema": "Progress",
       "description": "User-specific course completion data."
+    },
+    "users/{userId}/chapterCompletions": {
+      "schema": "ChapterCompletion",
+      "description": "User-specific per-chapter completion records."
     }
   }
 }
