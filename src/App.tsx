@@ -335,6 +335,13 @@ export default function App() {
             {user.photoURL && (
               <img src={user.photoURL} alt="User profile" className="w-8 h-8 rounded-full border border-gray-200" />
             )}
+            <button
+              onClick={logout}
+              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+              title="Cerrar Sesión"
+            >
+              <LogOut size={20} />
+            </button>
           </div>
         </header>
 
