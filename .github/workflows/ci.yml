@@ -3,6 +3,7 @@ name: CI/CD
 on:
   push:
     branches: ['**']
+    tags: ['**']
   pull_request:
     branches: [main]
 
@@ -10,6 +11,7 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    if: github.ref_type != 'tag'
 
     steps:
       - name: Checkout code
@@ -33,10 +35,12 @@ jobs:
   docker:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
-    needs: test
+    if: github.ref_type == 'tag'
+    environment: production
     permissions:
       contents: read
       packages: write
+      id-token: write
 
     steps:
       - name: Checkout code
@@ -49,35 +53,65 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to GitHub Container Registry
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: 'access_token'
+          workload_identity_provider: 'projects/${{ vars.GOOGLE_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: ${{ vars.GOOGLE_SERVICE_ACCOUNT }}
+          project_id: ${{ vars.GOOGLE_PROJECT_ID }}
+
+      - name: Log in to Google Artifact Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.GOOGLE_REGION }}-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
+        env:
+          GAR_IMAGE: ${{ format('{0}-docker.pkg.dev/{1}/{2}/go-skills', vars.GOOGLE_REGION, vars.GOOGLE_PROJECT_ID, vars.GOOGLE_ARTIFACT_REPO) }}
         with:
-          images: ghcr.io/${{ github.repository_owner }}/goskills
+          images: |
+            ghcr.io/${{ github.repository_owner }}/goskills
+            ${{ env.GAR_IMAGE }}
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=sha,prefix=main-,enable={{is_default_branch}}
+            type=ref,event=tag
+            type=raw,value=latest
+            type=raw,value=${{ github.sha }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+            VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}
+            VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}
+            VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+            VITE_FIREBASE_FIRESTORE_DATABASE_ID=${{ secrets.VITE_FIREBASE_FIRESTORE_DATABASE_ID }}
+            VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+            VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+            VITE_FIREBASE_MEASUREMENT_ID=${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
 
   deploy-production:
     runs-on: ubuntu-latest
+    if: github.ref_type == 'tag'
     environment: production
     needs: docker
 
@@ -105,13 +139,6 @@ jobs:
         service_account: ${{ env.SERVICE_ACCOUNT }}
         project_id: ${{ env.PROJECT_ID }}
 
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v2
-
-    - name: Build and Push Container Image via Cloud Build
-      run: |
-        gcloud builds submit --tag ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/${{ env.SERVICE_NAME }}:${{ github.sha }} .
-
     - name: Deploy to Google Cloud Run
       uses: google-github-actions/deploy-cloudrun@v2
       with:
@@ -119,9 +146,15 @@ jobs:
         region: ${{ env.REGION }}
         image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
         flags: '--allow-unauthenticated' # Makes the web application accessible publicly
-        
+
         # Safe Environment Injection (Passes your secret values securely to Cloud Run at runtime)
         env_vars: |
-          PORT=8080
-          FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
-          FIREBASE_DATABASE_URL=${{ secrets.FIREBASE_DATABASE_URL }}
+          ADMIN_ACCESS=${{ secrets.ADMIN_ACCESS }}
+          ALLOW_DOMAINS=${{ secrets.ALLOW_DOMAINS }}
+          AWS_REGION=${{ secrets.AWS_REGION }}
+          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
+          SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+          FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}
+          FIREBASE_DATABASE_URL=${{ secrets.VITE_FIREBASE_DATABASE_URL }}

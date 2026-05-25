@@ -1,9 +1,15 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import request from 'supertest';
 
-const { sendMock, getSignedUrlMock } = vi.hoisted(() => ({
+const { sendMock, getSignedUrlMock, adminMocks } = vi.hoisted(() => ({
   sendMock: vi.fn(),
   getSignedUrlMock: vi.fn(),
+  adminMocks: {
+    verifyIdToken: vi.fn(),
+    chapters: [] as { id: string }[],
+    txSet: vi.fn(),
+    txUpdate: vi.fn(),
+  },
 }));
 
 vi.mock('@aws-sdk/client-s3', () => {
@@ -29,6 +35,46 @@ vi.mock('vite', () => ({
   createServer: vi.fn(),
 }));
 
+vi.mock('firebase-admin/app', () => ({
+  initializeApp: vi.fn(() => ({})),
+  cert: vi.fn(() => ({})),
+  applicationDefault: vi.fn(() => ({})),
+  getApps: vi.fn(() => []),
+}));
+
+vi.mock('firebase-admin/auth', () => ({
+  getAuth: vi.fn(() => ({ verifyIdToken: (...a: any[]) => adminMocks.verifyIdToken(...a) })),
+}));
+
+// A minimal fake transaction that exercises the real endpoint logic: the course
+// has `adminMocks.chapters`, and neither the chapter nor the progress doc exists
+// yet (the count query reports 0 pre-write completions).
+const runTransaction = async (cb: (tx: any) => any) => {
+  const tx = {
+    get: async (ref: any) => {
+      const p: string = ref?.path || '';
+      if (p === 'courses/course-1') {
+        return { exists: true, get: (f: string) => (f === 'chapters' ? adminMocks.chapters : undefined) };
+      }
+      if (p.includes('/chapterCompletions/')) return { exists: false };
+      if (p.includes('/progress/')) return { exists: false, get: () => undefined };
+      return { size: 0 }; // the where() count query
+    },
+    set: (...a: any[]) => adminMocks.txSet(...a),
+    update: (...a: any[]) => adminMocks.txUpdate(...a),
+  };
+  return cb(tx);
+};
+
+vi.mock('firebase-admin/firestore', () => ({
+  getFirestore: vi.fn(() => ({
+    doc: vi.fn((p: string) => ({ path: p })),
+    collection: vi.fn((p: string) => ({ path: p, where: vi.fn(() => ({ path: p })) })),
+    runTransaction: (cb: any) => runTransaction(cb),
+  })),
+  FieldValue: { serverTimestamp: vi.fn(() => 'TS') },
+}));
+
 import { createApp } from '../server';
 
 const ORIGINAL_ENV = { ...process.env };
@@ -36,6 +82,10 @@ const ORIGINAL_ENV = { ...process.env };
 beforeEach(() => {
   sendMock.mockReset();
   getSignedUrlMock.mockReset();
+  adminMocks.verifyIdToken.mockReset();
+  adminMocks.txSet.mockReset();
+  adminMocks.txUpdate.mockReset();
+  adminMocks.chapters = [];
   process.env = { ...ORIGINAL_ENV };
 });
 
@@ -258,5 +308,82 @@ describe('POST /api/video/presign', () => {
     expect(res.status).toBe(500);
     expect(res.body.error).toMatch(/Failed to generate presigned URL/);
     errorSpy.mockRestore();
+  });
+});
+
+describe('POST /api/progress/chapter-completed', () => {
+  it('returns 401 when the Authorization header is missing', async () => {
+    const app = createApp();
+    const res = await request(app)
+      .post('/api/progress/chapter-completed')
+      .send({ courseId: 'course-1', chapterId: 'c1' });
+    expect(res.status).toBe(401);
+    expect(res.body.error).toBe('missing_token');
+  });
+
+  it('returns 400 when the body is invalid', async () => {
+    const app = createApp();
+    const res = await request(app)
+      .post('/api/progress/chapter-completed')
+      .set('Authorization', 'Bearer tok')
+      .send({ courseId: 'course-1' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('invalid_body');
+  });
+
+  it('returns 401 when the token cannot be verified', async () => {
+    adminMocks.verifyIdToken.mockRejectedValueOnce(new Error('bad token'));
+    const app = createApp();
+    const res = await request(app)
+      .post('/api/progress/chapter-completed')
+      .set('Authorization', 'Bearer tok')
+      .send({ courseId: 'course-1', chapterId: 'c1' });
+    expect(res.status).toBe(401);
+    expect(res.body.error).toBe('invalid_token');
+  });
+
+  it('records a completion and leaves the course in_progress when chapters remain', async () => {
+    adminMocks.verifyIdToken.mockResolvedValueOnce({ uid: 'user-1' });
+    adminMocks.chapters = [{ id: 'c1' }, { id: 'c2' }];
+    const app = createApp();
+    const res = await request(app)
+      .post('/api/progress/chapter-completed')
+      .set('Authorization', 'Bearer tok')
+      .send({ courseId: 'course-1', chapterId: 'c1' });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ success: true, status: 'in_progress', completedCount: 1, totalChapters: 2 });
+    // Wrote the chapter leaf and created the progress doc.
+    expect(adminMocks.txSet).toHaveBeenCalledTimes(2);
+    const progressWrite = adminMocks.txSet.mock.calls.find((c) => c[1]?.status);
+    expect(progressWrite?.[1].status).toBe('in_progress');
+  });
+
+  it('marks the course completed when the final chapter is finished', async () => {
+    adminMocks.verifyIdToken.mockResolvedValueOnce({ uid: 'user-1' });
+    adminMocks.chapters = [{ id: 'c1' }];
+    const app = createApp();
+    const res = await request(app)
+      .post('/api/progress/chapter-completed')
+      .set('Authorization', 'Bearer tok')
+      .send({ courseId: 'course-1', chapterId: 'c1' });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ success: true, status: 'completed', completedCount: 1, totalChapters: 1 });
+    const progressWrite = adminMocks.txSet.mock.calls.find((c) => c[1]?.status);
+    expect(progressWrite?.[1].status).toBe('completed');
+    expect(progressWrite?.[1].completedAt).toBe('TS');
+  });
+
+  it('returns 404 when the chapter is not part of the course', async () => {
+    adminMocks.verifyIdToken.mockResolvedValueOnce({ uid: 'user-1' });
+    adminMocks.chapters = [{ id: 'c1' }];
+    const app = createApp();
+    const res = await request(app)
+      .post('/api/progress/chapter-completed')
+      .set('Authorization', 'Bearer tok')
+      .send({ courseId: 'course-1', chapterId: 'does-not-exist' });
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('chapter_not_in_course');
   });
 });

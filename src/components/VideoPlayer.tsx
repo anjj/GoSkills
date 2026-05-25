@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
-import { Course, Chapter, UserProgress } from '../types';
-import { ArrowLeft, CheckCircle, Clock, Play, Pause, Volume2, VolumeX, Maximize, Minimize, Check, ChevronRight, BookText } from 'lucide-react';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db, auth } from '../lib/firebase';
+import { Course, Chapter } from '../types';
+import { ArrowLeft, CheckCircle, Clock, Play, Pause, Volume2, VolumeX, Maximize, Minimize, ChevronRight, BookText } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface CustomVideoPlayerProps {
   src?: string;
   poster?: string;
+  onEnded?: () => void;
   key?: React.Key;
 }
 
-function CustomVideoPlayer({ src, poster }: CustomVideoPlayerProps) {
+function CustomVideoPlayer({ src, poster, onEnded }: CustomVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -176,6 +177,7 @@ function CustomVideoPlayer({ src, poster }: CustomVideoPlayerProps) {
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         onTimeUpdate={handleTimeUpdate}
+        onEnded={() => onEnded?.()}
         onError={() => setHasError(true)}
       />
       
@@ -242,50 +244,51 @@ interface VideoPlayerProps {
 export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
   const [currentChapterIndex, setCurrentChapterIndex] = useState(0);
   const [completedChapters, setCompletedChapters] = useState<string[]>([]);
-  const [marking, setMarking] = useState(false);
 
   const chapters = course.chapters || [];
   const currentChapter = chapters[currentChapterIndex] || chapters[0] || {} as Chapter;
 
   useEffect(() => {
-    const checkProgress = async () => {
+    const loadCompletions = async () => {
       if (!auth.currentUser || chapters.length === 0) return;
-      const progressRef = doc(db, 'users', auth.currentUser.uid, 'progress', course.id);
       try {
-        const snap = await getDoc(progressRef);
-        if (snap.exists()) {
-          if (snap.data().completed) {
-            setCompletedChapters(chapters.map(c => c.id));
-          }
-        }
+        const q = query(
+          collection(db, 'users', auth.currentUser.uid, 'chapterCompletions'),
+          where('courseId', '==', course.id)
+        );
+        const snap = await getDocs(q);
+        setCompletedChapters(snap.docs.map(d => d.data().chapterId as string));
       } catch (error) {
         console.error("Error checking progress:", error);
       }
     };
-    checkProgress();
+    loadCompletions();
   }, [course.id, chapters]);
 
-  const toggleCourseComplete = async () => {
-    if (!auth.currentUser || chapters.length === 0) return;
-    setMarking(true);
-    const progressRef = doc(db, 'users', auth.currentUser.uid, 'progress', course.id);
-    const isNowCompleted = completedChapters.length !== chapters.length;
-    
+  const markChapterCompleted = async (chapterId: string) => {
+    if (!auth.currentUser || !chapterId) return;
+    if (completedChapters.includes(chapterId)) return;
     try {
-      await setDoc(progressRef, {
-        courseId: course.id,
-        completed: isNowCompleted,
-        completedAt: isNowCompleted ? new Date().toISOString() : null
+      const token = await auth.currentUser.getIdToken();
+      const res = await fetch('/api/progress/chapter-completed', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ courseId: course.id, chapterId }),
       });
-      setCompletedChapters(isNowCompleted ? chapters.map(c => c.id) : []);
+      if (res.ok) {
+        setCompletedChapters(prev => (prev.includes(chapterId) ? prev : [...prev, chapterId]));
+      } else {
+        console.error('Failed to record chapter completion:', res.status);
+      }
     } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, `users/${auth.currentUser.uid}/progress/${course.id}`);
-    } finally {
-      setMarking(false);
+      console.error('Error recording chapter completion:', error);
     }
   };
 
-  const isCourseFinished = chapters.length > 0 && completedChapters.length === chapters.length;
+  const isCourseFinished = chapters.length > 0 && chapters.every(c => completedChapters.includes(c.id));
 
   return (
     <div className="max-w-6xl mx-auto pb-20">
@@ -318,10 +321,11 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     />
                   ) : (
-                    <CustomVideoPlayer 
-                      src={currentChapter.videoUrl || undefined} 
+                    <CustomVideoPlayer
+                      src={currentChapter.videoUrl || undefined}
                       key={currentChapter.videoUrl || 'empty'}
                       poster={course.thumbnailUrl}
+                      onEnded={() => markChapterCompleted(currentChapter.id)}
                     />
                   )}
                 </motion.div>
@@ -388,29 +392,30 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
             </div>
 
             <div className="mt-8 pt-8 border-t border-gray-100">
-              <button
-                disabled={marking}
-                onClick={toggleCourseComplete}
-                className={`w-full flex items-center justify-center gap-3 py-4 rounded-lg font-bold transition-all shadow-md active:scale-[0.98] ${
-                  isCourseFinished 
-                    ? 'bg-green-500 hover:bg-green-600 text-white' 
-                    : 'bg-brand hover:bg-brand/90 text-white'
-                } ${marking ? 'opacity-70 cursor-not-allowed' : ''}`}
+              <div
+                className={`w-full flex items-center justify-center gap-3 py-4 rounded-lg font-bold ${
+                  isCourseFinished
+                    ? 'bg-green-50 text-green-600'
+                    : 'bg-gray-50 text-gray-500'
+                }`}
               >
-                {marking ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : isCourseFinished ? (
+                {isCourseFinished ? (
                   <>
                     <CheckCircle size={20} />
                     Curso Completado
                   </>
                 ) : (
                   <>
-                    <Check size={20} />
-                    Finalizar Curso
+                    <Clock size={20} />
+                    {completedChapters.length} de {chapters.length} capítulos completados
                   </>
                 )}
-              </button>
+              </div>
+              {!isCourseFinished && (
+                <p className="text-xs text-gray-400 text-center mt-3">
+                  Termina cada vídeo para completar el curso automáticamente.
+                </p>
+              )}
             </div>
           </div>
 
