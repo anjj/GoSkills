@@ -295,10 +295,10 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white p-8 rounded-xl border border-gray-200 shadow-xl"
+          className="bg-white p-12 rounded-[2.5rem] border border-gray-100 shadow-2xl shadow-gray-200/50"
         >
-          <div className="w-16 h-16 bg-gray-900 rounded-xl flex items-center justify-center mx-auto mb-6">
-            <Lock className="text-white" size={32} />
+          <div className="w-20 h-20 bg-gray-900 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl shadow-gray-200">
+            <Lock className="text-white" size={40} />
           </div>
           <h1 className="text-2xl font-display font-bold text-center mb-2">Gestión de Cursos</h1>
           <p className="text-gray-500 text-center mb-8">Introduce la contraseña de administrador para gestionar los cursos existentes.</p>
@@ -403,16 +403,16 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
         </div>
       ) : (
         <div className="bg-white rounded-lg p-8 border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between mb-10">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center">
-                {editingCourseId ? <Settings className="text-white" size={24} /> : <Plus className="text-white" size={24} />}
+          <div className="flex items-center justify-between mb-10 bg-gray-50/50 p-8 rounded-[2rem] border border-gray-100">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-gray-900 rounded-2xl flex items-center justify-center shadow-lg shadow-gray-200">
+                {editingCourseId ? <Settings className="text-white" size={28} /> : <Plus className="text-white" size={28} />}
               </div>
               <div>
-                <h1 className="text-2xl font-display font-bold text-gray-900">
+                <h1 className="text-2xl font-display font-black text-gray-900">
                   {editingCourseId ? 'Editar Curso' : 'Nuevo Curso'}
                 </h1>
-                <p className="text-gray-500 text-sm">
+                <p className="text-gray-500 text-sm font-medium">
                   {editingCourseId ? 'Actualiza los contenidos existentes.' : 'Define el contenido de formación.'}
                 </p>
               </div>
@@ -440,8 +440,8 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
                     setFormData({ ...formData, title: e.target.value });
                     if (errors.title) setErrors({ ...errors, title: '' });
                   }}
-                  className={`w-full bg-gray-50 border rounded-lg px-4 py-3 focus:bg-white focus:ring-2 outline-none transition-all ${
-                    errors.title ? 'border-red-500 focus:ring-red-500 bg-red-50' : 'border-gray-100 focus:ring-brand'
+                  className={`w-full bg-gray-50 border rounded-xl px-4 py-3 focus:bg-white focus:ring-2 outline-none transition-all ${
+                    errors.title ? 'border-red-500 focus:ring-red-500 bg-red-50' : 'border-gray-100 focus:ring-brand/20 focus:border-brand/30'
                   }`}
                 />
                 {errors.title && <p className="text-red-500 text-[10px] font-bold uppercase mt-1">{errors.title}</p>}
@@ -458,8 +458,8 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
                     setFormData({ ...formData, category: e.target.value });
                     if (errors.category) setErrors({ ...errors, category: '' });
                   }}
-                  className={`w-full bg-gray-50 border rounded-lg px-4 py-3 focus:bg-white focus:ring-2 outline-none transition-all ${
-                    errors.category ? 'border-red-500 focus:ring-red-500 bg-red-50' : 'border-gray-100 focus:ring-brand'
+                  className={`w-full bg-gray-50 border rounded-xl px-4 py-3 focus:bg-white focus:ring-2 outline-none transition-all ${
+                    errors.category ? 'border-red-500 focus:ring-red-500 bg-red-50' : 'border-gray-100 focus:ring-brand/20 focus:border-brand/30'
                   }`}
                 />
                 {errors.category && <p className="text-red-500 text-[10px] font-bold uppercase mt-1">{errors.category}</p>}
@@ -473,7 +473,7 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full bg-gray-50 border border-gray-100 rounded-lg px-4 py-3 focus:bg-white focus:ring-2 focus:ring-brand outline-none transition-all h-24 resize-none"
+                className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 focus:bg-white focus:ring-2 focus:ring-brand/20 focus:border-brand/30 outline-none transition-all h-24 resize-none"
               />
             </div>
 
@@ -504,7 +504,7 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
               </div>
             </div>
 
-            <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between">
+            <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-gray-900">Estado de Publicación</h3>
                 <p className="text-sm text-gray-500">¿Quieres que este curso sea visible para todos los usuarios?</p>

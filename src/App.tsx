@@ -24,27 +24,20 @@ function Logo({ className = "w-8 h-8" }: { className?: string }) {
       fill="none" 
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* Mortarboard Cap Top - Shifted slightly right to balance tassel */}
+      {/* Dynamic Arrow Motif - Symbolizing progress and innovation */}
       <path 
-        d="M51 10L11 35L51 60L91 35L51 10Z" 
-        className="fill-brand"
-      />
-      {/* Tassel */}
-      <path 
-        d="M16 38V55C16 55 13 58 13 62C13 66 16 68 16 68C16 68 19 66 19 62C19 58 16 55 16 55" 
-        className="fill-brand"
-      />
-      {/* Bottom Square/Book Part */}
-      <path 
-        d="M26 45V80C26 85 31 90 36 90H66C71 90 76 85 76 80V45" 
+        d="M20 80L80 20M80 20H45M80 20V55"
         className="stroke-brand"
-        strokeWidth="8"
+        strokeWidth="12"
+        strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {/* Play Button Triangle */}
+      {/* Abstract 'G' curve */}
       <path 
-        d="M43 55L63 65L43 75V55Z" 
-        className="fill-brand"
+        d="M20 40C20 28.9543 28.9543 20 40 20"
+        className="stroke-brand/30"
+        strokeWidth="12"
+        strokeLinecap="round"
       />
     </svg>
   );
@@ -120,26 +113,26 @@ export default function App() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white px-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50/50 px-4">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center max-w-md w-full"
+          className="text-center max-w-md w-full bg-white p-12 rounded-[2.5rem] shadow-2xl shadow-brand/5 border border-gray-100"
           id="login-container"
         >
           <div className="flex justify-center mb-6" id="logo-container">
             <Logo className="w-24 h-24" />
           </div>
-          <h1 className="text-5xl font-display font-bold mb-6 tracking-tighter">
-            <span className="text-brand">Go</span>
-            <span className="text-black">Skills</span>
+          <h1 className="text-5xl font-display font-bold mb-6 tracking-tighter lowercase">
+            <span className="text-brand">go</span>
+            <span className="text-black">live</span>
           </h1>
-          <p className="text-gray-600 mb-10 text-lg max-w-md mx-auto leading-relaxed">
-            La plataforma interna de formación para equipos de alto rendimiento.
+          <p className="text-gray-500 mb-10 text-lg max-w-sm mx-auto leading-relaxed font-medium">
+            making life easier.
           </p>
           <button
             onClick={signIn}
-            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 py-4 px-6 rounded-lg font-bold transition-all shadow-sm active:scale-[0.98] hover:scale-[1.02]"
+            className="w-full flex items-center justify-center gap-3 bg-gray-900 hover:bg-black text-white py-4 px-6 rounded-2xl font-bold transition-all shadow-xl shadow-gray-200 active:scale-[0.98] hover:scale-[1.02]"
           >
             <GoogleIcon />
             Acceso Corporativo
@@ -166,17 +159,17 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar navigation */}
-      <aside className="w-72 bg-white border-r border-gray-100 hidden lg:flex flex-col fixed inset-y-0 z-40">
+      <aside className="w-72 bg-white border-r border-gray-50 hidden lg:flex flex-col fixed inset-y-0 z-40 shadow-xl shadow-gray-100/50">
         <div className="p-8">
-          <div className="flex items-center gap-3 mb-12">
+          <div className="flex items-center gap-3 mb-16">
             <Logo className="w-10 h-10" />
-            <span className="text-2xl font-display font-bold tracking-tighter">
-              <span className="text-brand">Go</span>
-              <span className="text-black">Skills</span>
+            <span className="text-2xl font-display font-black tracking-tighter lowercase">
+              <span className="text-brand">go</span>
+              <span className="text-black">live</span>
             </span>
           </div>
 
-          <nav className="space-y-1">
+          <nav className="space-y-2">
             <NavItem 
               active={currentView === 'dashboard'} 
               onClick={() => { setCurrentView('dashboard'); setSelectedCourse(null); }}
@@ -230,9 +223,9 @@ export default function App() {
               <div className="flex items-center justify-between mb-12">
                 <div className="flex items-center gap-3">
                   <Logo className="w-10 h-10" />
-                  <span className="text-2xl font-display font-bold tracking-tighter">
-                    <span className="text-brand">Go</span>
-                    <span className="text-black">Skills</span>
+                  <span className="text-2xl font-display font-bold tracking-tighter lowercase">
+                    <span className="text-brand">go</span>
+                    <span className="text-black">live</span>
                   </span>
                 </div>
                 <button onClick={closeMenu} className="p-2 text-gray-400 hover:text-gray-900 rounded-lg hover:bg-gray-50">
@@ -305,28 +298,28 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 lg:ml-72 min-h-screen">
-        <header className="h-16 bg-white/80 border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-40 backdrop-blur-md">
+        <header className="h-20 bg-white/80 border-b border-gray-100 flex items-center justify-between px-8 sticky top-0 z-40 backdrop-blur-xl">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setIsMenuOpen(true)}
-              className="lg:hidden p-2 text-gray-600 hover:text-brand transition-colors"
+              className="lg:hidden p-2 text-gray-400 hover:text-brand transition-colors"
             >
               <Menu size={24} />
             </button>
-            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-4 py-1.5 rounded-full hidden sm:block">
+            <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] bg-gray-50 px-4 py-2 rounded-xl hidden sm:block border border-gray-100">
               {currentView === 'dashboard' && 'Explorar Cursos'}
               {currentView === 'profile' && 'Tu Actividad'}
               {currentView === 'admin' && 'Gestión de Contenido'}
               {currentView === 'player' && 'Reproductor'}
             </h2>
           </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
             <button 
               onClick={() => {
                 setCurrentView('admin');
                 if (isAdmin) setAdminView('create');
               }}
-              className="hidden sm:flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-brand transition-colors uppercase tracking-widest px-4 py-2 rounded-lg hover:bg-gray-100"
+              className="hidden sm:flex items-center gap-2 text-[10px] font-black text-gray-400 hover:text-brand transition-colors uppercase tracking-[0.2em] px-4 py-2 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-100"
             >
               {isAdmin ? (
                 <>
@@ -395,13 +388,13 @@ function NavItem({ active, onClick, icon, label }: { active: boolean, onClick: (
     <button
       id="nav-item-button"
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all font-bold text-sm ${
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm ${
         active 
-          ? 'bg-brand text-white shadow-lg shadow-brand/20 scale-[1.02]' 
-          : 'text-gray-500 hover:text-brand hover:bg-brand/5'
+          ? 'bg-brand text-white shadow-xl shadow-brand/10 scale-[1.02]'
+          : 'text-gray-400 hover:text-brand hover:bg-brand/5'
       }`}
     >
-      <span className={active ? 'text-white' : 'text-gray-400'}>
+      <span className={active ? 'text-white' : 'text-gray-400 transition-colors group-hover:text-brand'}>
         {icon}
       </span>
       {label}
