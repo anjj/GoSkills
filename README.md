@@ -1,15 +1,14 @@
 # GoSkills
 
-![Coverage](https://img.shields.io/badge/coverage-84%25-brightgreen) ![Tests](https://img.shields.io/badge/tests-97%20passed-brightgreen)
+A minimalist internal LMS for video-based knowledge pills.
 
-## Product Explained
-GoSkills is a complete, modern Learning Management System (LMS) and video course platform. It is designed to provide users with a clean, intuitive dashboard to explore and consume video courses on various topics, such as AI tools and programming languages.
+[![Tech Stack](https://img.shields.io/badge/Stack-React%20%7C%20Node.js%20%7C%20Firebase%20%7C%20AWS-blue)](#tech-stack)
+[![Documentation](https://img.shields.io/badge/Docs-RAG--Ready-green)](./docs/how-it-works.md)
 
-The platform includes a robust **Admin Panel** that allows administrators to:
-- Create and categorize new courses.
-- Manage course curriculums with multiple video chapters.
-- Securely upload video files directly to **AWS S3**.
-- Stream content securely using S3 Presigned URLs, protecting video assets from unauthorized direct access.
+## 📖 Documentation
+- [**How it Works**](./docs/how-it-works.md): High-level overview of the platform.
+- [**Business Rules**](./docs/business-rules.md): Logic, validations, and constraints.
+- [**Diagnostics**](./docs/diagnostics.md): Error mapping and troubleshooting guide.
 
 ## Setup Instructions
 
@@ -19,8 +18,9 @@ The platform includes a robust **Admin Panel** that allows administrators to:
 - An AWS Account with an S3 bucket configured for CORS (to allow video uploads and playback).
 - A Firebase project configured with Firestore and Authentication.
 
-### 2. Required Secrets & Environment Variables
-To run properly, the application requires several environment variables. These should be configured in your deployment environment (like the Secrets panel in AI Studio) or stored in a `.env` file for local development.
+1. **Install:** `npm install`
+2. **Configure:** Copy `.env.example` to `.env` and fill in your secrets.
+3. **Run:** `npm run dev` (Starts Vite + Express server).
 
 ```env
 # AWS Credentials for S3 Video Storage
