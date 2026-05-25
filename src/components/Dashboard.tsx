@@ -45,7 +45,7 @@ export default function Dashboard({ onPlay }: DashboardProps) {
           placeholder="Busca cursos por título o categoría..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-white border border-gray-100 rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-brand/20 focus:border-brand/30 transition-all outline-none text-lg shadow-xl shadow-gray-100"
+          className="w-full bg-white border border-gray-100 rounded-xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-brand/20 focus:border-brand/30 transition-all outline-none text-lg shadow-xl shadow-gray-100"
         />
       </div>
 
@@ -66,7 +66,7 @@ export default function Dashboard({ onPlay }: DashboardProps) {
               layoutId={course.id}
               key={course.id}
               onClick={() => course.published !== false ? onPlay(course) : null}
-              className={`bg-white rounded-[2rem] overflow-hidden border border-gray-100 transition-all shadow-sm ${
+              className={`bg-white rounded-2xl overflow-hidden border border-gray-100 transition-all shadow-sm ${
                 course.published !== false 
                   ? 'hover:shadow-2xl hover:shadow-brand/10 cursor-pointer group'
                   : 'opacity-75 cursor-not-allowed'
@@ -79,7 +79,7 @@ export default function Dashboard({ onPlay }: DashboardProps) {
                   className={`w-full h-full object-cover transition-transform duration-500 ${course.published !== false ? 'group-hover:scale-105' : ''}`}
                 />
                 <div className="absolute top-4 left-4 flex gap-2">
-                  <div className="bg-white/90 backdrop-blur px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-brand shadow-sm">
+                  <div className="bg-white/90 backdrop-blur px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-brand shadow-sm">
                     {course.category}
                   </div>
                   {course.published === false && (

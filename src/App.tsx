@@ -117,7 +117,7 @@ export default function App() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center max-w-md w-full bg-white p-12 rounded-[2.5rem] shadow-2xl shadow-brand/5 border border-gray-100"
+          className="text-center max-w-md w-full bg-white p-12 rounded-3xl shadow-2xl shadow-brand/5 border border-gray-100"
           id="login-container"
         >
           <div className="flex justify-center mb-6" id="logo-container">
@@ -132,7 +132,7 @@ export default function App() {
           </p>
           <button
             onClick={signIn}
-            className="w-full flex items-center justify-center gap-3 bg-gray-900 hover:bg-black text-white py-4 px-6 rounded-2xl font-bold transition-all shadow-xl shadow-gray-200 active:scale-[0.98] hover:scale-[1.02]"
+            className="w-full flex items-center justify-center gap-3 bg-gray-900 hover:bg-black text-white py-4 px-6 rounded-xl font-bold transition-all shadow-xl shadow-gray-200 active:scale-[0.98] hover:scale-[1.02]"
           >
             <GoogleIcon />
             Acceso Corporativo
@@ -306,7 +306,7 @@ export default function App() {
             >
               <Menu size={24} />
             </button>
-            <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] bg-gray-50 px-4 py-2 rounded-xl hidden sm:block border border-gray-100">
+            <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] bg-gray-50 px-4 py-2 rounded-lg hidden sm:block border border-gray-100">
               {currentView === 'dashboard' && 'Explorar Cursos'}
               {currentView === 'profile' && 'Tu Actividad'}
               {currentView === 'admin' && 'Gestión de Contenido'}
@@ -319,7 +319,7 @@ export default function App() {
                 setCurrentView('admin');
                 if (isAdmin) setAdminView('create');
               }}
-              className="hidden sm:flex items-center gap-2 text-[10px] font-black text-gray-400 hover:text-brand transition-colors uppercase tracking-[0.2em] px-4 py-2 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-100"
+              className="hidden sm:flex items-center gap-2 text-[10px] font-black text-gray-400 hover:text-brand transition-colors uppercase tracking-[0.2em] px-4 py-2 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-100"
             >
               {isAdmin ? (
                 <>

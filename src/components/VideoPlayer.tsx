@@ -303,7 +303,7 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Player Area */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-[2rem] overflow-hidden shadow-2xl shadow-gray-200/50 border border-gray-100">
+          <div className="bg-white rounded-2xl overflow-hidden shadow-2xl shadow-gray-200/50 border border-gray-100">
             <div className="aspect-video bg-black relative">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -334,7 +334,7 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
 
             <div className="p-8">
               <div className="flex items-center gap-3 mb-4">
-                <span className="bg-brand/10 text-brand px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] border border-brand/10">
+                <span className="bg-brand/10 text-brand px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-[0.15em] border border-brand/10">
                   Capítulo {currentChapterIndex + 1} de {chapters.length}
                 </span>
               </div>
@@ -345,7 +345,7 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
                   <BookText size={18} />
                   <span className="text-sm font-bold uppercase tracking-widest">Material de Lectura</span>
                 </div>
-                <p className="text-gray-600 text-lg leading-relaxed whitespace-pre-wrap bg-gray-50/50 p-8 rounded-2xl border border-gray-100">
+                <p className="text-gray-600 text-lg leading-relaxed whitespace-pre-wrap bg-gray-50/50 p-8 rounded-xl border border-gray-100">
                   {currentChapter.text || "No hay texto adicional para este capítulo."}
                 </p>
               </div>
@@ -355,7 +355,7 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
 
         {/* Sidebar: Chapters List & Progress */}
         <div className="space-y-6">
-          <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-xl shadow-gray-100">
+          <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-xl shadow-gray-100">
             <h2 className="text-lg font-display font-black text-gray-900 mb-8 flex items-center justify-between uppercase tracking-tighter">
               Contenido
               <span className="text-xs font-black text-gray-300 tracking-widest">{course.duration}</span>
@@ -366,13 +366,13 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
                 <button
                   key={chapter.id}
                   onClick={() => setCurrentChapterIndex(index)}
-                  className={`w-full text-left p-4 rounded-2xl transition-all flex items-center gap-4 group relative ${
+                  className={`w-full text-left p-4 rounded-xl transition-all flex items-center gap-4 group relative ${
                     currentChapterIndex === index 
                       ? 'bg-brand text-white shadow-xl shadow-brand/20 scale-[1.02]'
                       : 'bg-gray-50/50 text-gray-500 hover:bg-gray-100 border border-transparent hover:border-gray-200'
                   }`}
                 >
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-black text-xs shrink-0 ${
                     currentChapterIndex === index ? 'bg-white/20' : 'bg-white shadow-sm border border-gray-100'
                   }`}>
                     {index + 1}
@@ -419,7 +419,7 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
             </div>
           </div>
 
-          <div className="bg-gray-900 text-white p-8 rounded-[2rem] shadow-2xl shadow-gray-200">
+          <div className="bg-gray-900 text-white p-8 rounded-2xl shadow-2xl shadow-gray-200">
             <h3 className="font-display font-black mb-3 uppercase tracking-wider text-xs text-gray-500">Sobre este curso</h3>
             <p className="text-sm text-gray-400 leading-relaxed mb-4">
               {course.description}
