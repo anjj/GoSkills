@@ -5,12 +5,13 @@ import { db, storage, handleFirestoreError, OperationType } from '../lib/firebas
 import { Chapter, Course } from '../types';
 import { Plus, Video, Image as ImageIcon, Type, FileText, Clock, Hash, Check, Lock, Trash2, Upload, AlertCircle, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import AdminStats from './AdminStats';
 
 interface AdminPanelProps {
   isAdmin: boolean;
   setIsAdmin: (val: boolean) => void;
-  view: 'list' | 'create';
-  onViewChange: (view: 'list' | 'create') => void;
+  view: 'list' | 'create' | 'stats';
+  onViewChange: (view: 'list' | 'create' | 'stats') => void;
 }
 
 export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: AdminPanelProps) {
@@ -340,7 +341,9 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-20">
-      {view === 'list' ? (
+      {view === 'stats' ? (
+        <AdminStats />
+      ) : view === 'list' ? (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
