@@ -120,13 +120,9 @@ export default function App() {
           className="text-center max-w-md w-full bg-white p-12 rounded-3xl shadow-2xl shadow-brand/5 border border-gray-100"
           id="login-container"
         >
-          <div className="flex justify-center mb-6" id="logo-container">
-            <Logo className="w-24 h-24" />
+          <div className="flex justify-center mb-10" id="logo-container">
+            <img src="/logo.png" alt="golive" className="h-16 w-auto object-contain" />
           </div>
-          <h1 className="text-5xl font-display font-bold mb-6 tracking-tighter lowercase">
-            <span className="text-brand">go</span>
-            <span className="text-black">live</span>
-          </h1>
           <p className="text-gray-500 mb-10 text-lg max-w-sm mx-auto leading-relaxed font-medium">
             making life easier.
           </p>
@@ -161,12 +157,8 @@ export default function App() {
       {/* Sidebar navigation */}
       <aside className="w-72 bg-white border-r border-gray-50 hidden lg:flex flex-col fixed inset-y-0 z-40 shadow-xl shadow-gray-100/50">
         <div className="p-8">
-          <div className="flex items-center gap-3 mb-16">
-            <Logo className="w-10 h-10" />
-            <span className="text-2xl font-display font-black tracking-tighter lowercase">
-              <span className="text-brand">go</span>
-              <span className="text-black">live</span>
-            </span>
+          <div className="flex items-center gap-3 mb-16 px-2">
+            <img src="/logo.png" alt="golive" className="h-8 w-auto object-contain" />
           </div>
 
           <nav className="space-y-2">
@@ -221,12 +213,8 @@ export default function App() {
               className="fixed left-0 top-0 bottom-0 w-80 bg-white z-50 lg:hidden flex flex-col p-8"
             >
               <div className="flex items-center justify-between mb-12">
-                <div className="flex items-center gap-3">
-                  <Logo className="w-10 h-10" />
-                  <span className="text-2xl font-display font-bold tracking-tighter lowercase">
-                    <span className="text-brand">go</span>
-                    <span className="text-black">live</span>
-                  </span>
+                <div className="flex items-center gap-3 px-2">
+                  <img src="/logo.png" alt="golive" className="h-8 w-auto object-contain" />
                 </div>
                 <button onClick={closeMenu} className="p-2 text-gray-400 hover:text-gray-900 rounded-lg hover:bg-gray-50">
                   <X size={24} />
