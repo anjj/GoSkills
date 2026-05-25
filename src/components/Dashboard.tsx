@@ -45,7 +45,7 @@ export default function Dashboard({ onPlay }: DashboardProps) {
           placeholder="Busca cursos por título o categoría..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-white border border-gray-200 rounded-lg py-4 pl-12 pr-4 focus:ring-2 focus:ring-brand focus:border-transparent transition-all outline-none text-lg shadow-sm"
+          className="w-full bg-white border border-gray-100 rounded-xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-brand/20 focus:border-brand/30 transition-all outline-none text-lg shadow-xl shadow-gray-100"
         />
       </div>
 
@@ -66,9 +66,9 @@ export default function Dashboard({ onPlay }: DashboardProps) {
               layoutId={course.id}
               key={course.id}
               onClick={() => course.published !== false ? onPlay(course) : null}
-              className={`bg-white rounded-lg overflow-hidden border border-gray-200 transition-all shadow-sm ${
+              className={`bg-white rounded-2xl overflow-hidden border border-gray-100 transition-all shadow-sm ${
                 course.published !== false 
-                  ? 'hover:border-brand/30 hover:shadow-xl hover:shadow-brand/5 cursor-pointer group' 
+                  ? 'hover:shadow-2xl hover:shadow-brand/10 cursor-pointer group'
                   : 'opacity-75 cursor-not-allowed'
               }`}
             >
@@ -78,8 +78,8 @@ export default function Dashboard({ onPlay }: DashboardProps) {
                   alt={course.title}
                   className={`w-full h-full object-cover transition-transform duration-500 ${course.published !== false ? 'group-hover:scale-105' : ''}`}
                 />
-                <div className="absolute top-3 left-3 flex gap-2">
-                  <div className="bg-white/90 backdrop-blur px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider text-brand">
+                <div className="absolute top-4 left-4 flex gap-2">
+                  <div className="bg-white/90 backdrop-blur px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-brand shadow-sm">
                     {course.category}
                   </div>
                   {course.published === false && (
