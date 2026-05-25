@@ -190,11 +190,36 @@ export default function App() {
               label="Mi Perfil"
             />
             <NavItem 
-              active={currentView === 'admin'} 
-              onClick={() => setCurrentView('admin')}
+              active={currentView === 'admin' && adminView === 'list'}
+              onClick={() => {
+                setCurrentView('admin');
+                setAdminView('list');
+              }}
               icon={<Settings size={20} />}
               label="Administración"
             />
+            {isAdmin && (
+              <>
+                <NavItem
+                  active={currentView === 'admin' && adminView === 'create'}
+                  onClick={() => {
+                    setCurrentView('admin');
+                    setAdminView('create');
+                  }}
+                  icon={<Plus size={20} />}
+                  label="Crear Nuevo Curso"
+                />
+                <NavItem
+                  active={currentView === 'admin' && adminView === 'stats'}
+                  onClick={() => {
+                    setCurrentView('admin');
+                    setAdminView('stats');
+                  }}
+                  icon={<BarChart3 size={20} />}
+                  label="Estadísticas"
+                />
+              </>
+            )}
           </nav>
         </div>
 
