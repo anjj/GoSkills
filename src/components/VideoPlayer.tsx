@@ -24,8 +24,10 @@ function CustomVideoPlayer({ src, poster, onEnded }: CustomVideoPlayerProps) {
   const [hasError, setHasError] = useState(false);
   const [presignedSrc, setPresignedSrc] = useState<string | null>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasCalledEnded = useRef(false);
 
   useEffect(() => {
+    hasCalledEnded.current = false;
     let active = true;
     const fetchPresignedUrl = async () => {
       if (!src) {
@@ -115,10 +117,22 @@ function CustomVideoPlayer({ src, poster, onEnded }: CustomVideoPlayerProps) {
     }
   };
 
+  const triggerEnded = () => {
+    if (!hasCalledEnded.current) {
+      hasCalledEnded.current = true;
+      onEnded?.();
+    }
+  };
+
   const handleTimeUpdate = () => {
     if (videoRef.current) {
       const currentProgress = (videoRef.current.currentTime / videoRef.current.duration) * 100;
       setProgress(isNaN(currentProgress) ? 0 : currentProgress);
+
+      // Fallback: if we are at more than 99.5% progress, trigger completion
+      if (!isNaN(currentProgress) && currentProgress > 99.5 && !hasCalledEnded.current) {
+        triggerEnded();
+      }
     }
   };
 
@@ -177,7 +191,7 @@ function CustomVideoPlayer({ src, poster, onEnded }: CustomVideoPlayerProps) {
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         onTimeUpdate={handleTimeUpdate}
-        onEnded={() => onEnded?.()}
+        onEnded={triggerEnded}
         onError={() => setHasError(true)}
       />
       
@@ -375,7 +389,11 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-black text-xs shrink-0 ${
                     currentChapterIndex === index ? 'bg-white/20' : 'bg-white shadow-sm border border-gray-100'
                   }`}>
-                    {index + 1}
+                    {completedChapters.includes(chapter.id) ? (
+                      <CheckCircle className={currentChapterIndex === index ? 'text-white' : 'text-green-500'} size={18} />
+                    ) : (
+                      index + 1
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-bold truncate ${currentChapterIndex === index ? 'text-white' : 'text-gray-900'}`}>
