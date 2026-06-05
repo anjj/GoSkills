@@ -327,21 +327,12 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
                   exit={{ opacity: 0 }}
                   className="w-full h-full"
                 >
-                  {(currentChapter.videoUrl || '').includes('youtube.com') || (currentChapter.videoUrl || '').includes('youtu.be') ? (
-                    <iframe
-                      src={currentChapter.videoUrl?.replace('watch?v=', 'embed/').split('&')[0]}
-                      className="w-full h-full"
-                      allowFullScreen
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    />
-                  ) : (
-                    <CustomVideoPlayer
-                      src={currentChapter.videoUrl || undefined}
-                      key={currentChapter.videoUrl || 'empty'}
-                      poster={course.thumbnailUrl}
-                      onEnded={() => markChapterCompleted(currentChapter.id)}
-                    />
-                  )}
+                  <CustomVideoPlayer
+                    src={currentChapter.videoUrl || undefined}
+                    key={currentChapter.videoUrl || 'empty'}
+                    poster={course.thumbnailUrl}
+                    onEnded={() => markChapterCompleted(currentChapter.id)}
+                  />
                 </motion.div>
               </AnimatePresence>
             </div>

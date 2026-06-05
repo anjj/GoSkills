@@ -26,11 +26,21 @@ function getAdminApp(): App {
     return adminApp;
   }
   const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
-  adminApp = initializeApp(
-    serviceAccount
-      ? { credential: cert(JSON.parse(serviceAccount)) }
-      : { credential: applicationDefault() }
-  );
+  if (serviceAccount) {
+    // The value in .env may be stored as a JSON-encoded string (i.e. wrapped in outer quotes),
+    // so we may need to parse twice to get the actual service account object.
+    let parsed = JSON.parse(serviceAccount);
+    if (typeof parsed === 'string') {
+      parsed = JSON.parse(parsed);
+    }
+    // dotenv may store newlines as literal \n sequences; the private key requires real newlines
+    if (parsed.private_key) {
+      parsed.private_key = parsed.private_key.replace(/\\n/g, '\n');
+    }
+    adminApp = initializeApp({ credential: cert(parsed) });
+  } else {
+    adminApp = initializeApp({ credential: applicationDefault() });
+  }
   return adminApp;
 }
 
@@ -200,7 +210,8 @@ export function createApp(): Express {
     try {
       const decoded = await getAdminAuth().verifyIdToken(idToken);
       userId = decoded.uid;
-    } catch {
+    } catch (err) {
+      console.error('[auth] verifyIdToken failed:', err instanceof Error ? err.message : err);
       return res.status(401).json({ error: "invalid_token" });
     }
 
