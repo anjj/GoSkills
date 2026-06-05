@@ -3,55 +3,48 @@
 ## Phase 1: Investigation & Test Setup
 
 - [x] Task: Read and understand the current VideoPlayer implementation
-    - [x] Read `src/components/VideoPlayer.tsx` focusing on `CustomVideoPlayer`, `markChapterCompleted`, and the YouTube iframe rendering branch.
-    - [x] Read existing tests in `tests/VideoPlayer.test.tsx` and `tests/VideoPlayerEnhancements.test.tsx` to understand test patterns and mocking strategy.
-    - [x] Confirm the root cause: the YouTube `<iframe>` has no `onEnded` callback wired.
+    - [x] Read `src/components/VideoPlayer.tsx` — confirmed `onEnded` and 99.5% fallback correctly fire `markChapterCompleted`.
+    - [x] Read `tests/VideoPlayer.test.tsx` and `tests/server.test.ts` to understand test patterns.
+    - [x] Identified root cause: `POST /api/progress/chapter-completed` returns **401 Unauthorized** because `FIREBASE_SERVICE_ACCOUNT` in `.env` is double-encoded (outer quotes) causing `JSON.parse` to return a string, not an object. Firebase Admin's `verifyIdToken` then fails.
+    - [x] Identified secondary issue: `FIREBASE_SERVICE_ACCOUNT` private key had literal `\\n` instead of real newlines.
+    - [x] Confirmed pre-existing broken server tests (3 failures) caused by the same JSON issue.
 
-- [x] Task: Write failing tests for YouTube chapter completion (Red Phase)
-    - [x] In `tests/VideoPlayer.test.tsx` (or a new `tests/VideoPlayerYouTube.test.tsx`), add a test that:
-        1. Renders a `VideoPlayer` with a course whose first chapter is a YouTube URL.
-        2. Simulates the YouTube IFrame API firing `YT.PlayerState.ENDED`.
-        3. Asserts that `fetch` was called with `POST /api/progress/chapter-completed` and the correct `chapterId`.
-    - [x] Add a test verifying idempotency: firing `ENDED` twice results in only one API call.
-    - [x] Run `CI=true npm test` and confirm the new tests fail as expected (Red Phase).
-
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Investigation & Test Setup' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Investigation & Test Setup'
+    - User confirmed: 401 Unauthorized on chapter completion. No YouTube videos exist; all videos are S3-hosted.
 
 ## Phase 2: Implementation
 
-- [x] Task: Implement YouTube IFrame API integration in `VideoPlayer.tsx`
-    - [x] Create a `loadYouTubeAPI()` utility function that lazily loads the YouTube IFrame API script (`https://www.youtube.com/iframe_api`) only once (guard against double-loading).
-    - [x] Refactor the YouTube `<iframe>` branch in `VideoPlayer.tsx`:
-        - [x] Assign a unique `id` to the iframe (e.g., `yt-player-${currentChapter.id}`).
-        - [x] Call `loadYouTubeAPI()` when the YouTube chapter is active.
-        - [x] After the API is ready, instantiate a `YT.Player` object targeting the iframe.
-        - [x] In the `YT.Player`'s `onStateChange` handler, call `markChapterCompleted(currentChapter.id)` when `event.data === YT.PlayerState.ENDED`.
-    - [x] Apply the `hasCalledEnded` guard to the YouTube completion path to ensure idempotency.
-    - [x] In `useEffect` cleanup (triggered when `currentChapterIndex` or `currentChapter.id` changes), call `ytPlayer.destroy()` to dispose the previous player and prevent stale event listeners.
-    - [x] Run `CI=true npm test` and confirm all tests pass (Green Phase).
+- [x] Task: Fix Firebase Admin SDK initialization in `server.ts`
+    - [x] Add double-parse guard: if `JSON.parse(serviceAccount)` returns a string, parse again.
+    - [x] Normalize `\\n` → real newlines in `private_key` field.
+    - [x] Add diagnostic error logging to `verifyIdToken` catch block (was swallowing all errors).
+    - [x] Run `CI=true npm test` — **106/106 tests pass**.
 
-- [x] Task: Refactor and clean up (Refactor Phase)
-    - [x] Extract the YouTube player logic into a custom hook (`useYouTubePlayer`) and a presentational `YTChapterPlayer` component to keep `VideoPlayer.tsx` focused.
-    - [x] Ensure TypeScript types are correct (added inline interfaces for the `YT` global via `declare global`).
-    - [x] Run `CI=true npm test` one more time to confirm no regressions — **112/112 tests pass**.
+- [x] Task: Fix test isolation in `tests/server.test.ts`
+    - [x] Delete `FIREBASE_SERVICE_ACCOUNT` in `beforeEach` to prevent real service account JSON from reaching `JSON.parse` when firebase-admin is mocked.
+    - [x] 3 previously broken server tests now pass.
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Implementation' (Protocol in workflow.md)
+- [x] Task: Fix `VideoPlayer.test.tsx` YouTube iframe test
+    - [x] Updated test to assert all videos use the native `<video>` element (not iframe), matching actual S3-only architecture.
+
+- [x] Task: Update `.env.example` (FR-4)
+    - [x] Added clear documentation: FIREBASE_SERVICE_ACCOUNT is REQUIRED for chapter completion, paste JSON without outer quotes.
+
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Implementation' (Protocol in workflow.md)
 
 ## Phase 3: Review & Documentation
 
 - [ ] Task: Run full test suite and verify coverage
-    - [ ] Run `CI=true npm run test:coverage` and verify the new code paths achieve ≥90% coverage.
+    - [ ] Run `CI=true npm run test:coverage` and verify ≥90% coverage.
     - [ ] Fix any coverage gaps.
 
 - [ ] Task: Manual end-to-end verification
-    - [ ] Start the dev server (`npm run dev`).
-    - [ ] Navigate to a course with a YouTube chapter.
-    - [ ] Watch the YouTube video to the end and confirm the sidebar shows the `CheckCircle` icon for that chapter.
+    - [ ] Restart the dev server (`npm run dev`).
+    - [ ] Navigate to a course, watch a video to the end, confirm the sidebar shows the `CheckCircle` icon.
     - [ ] Confirm the progress counter updates (e.g., "1 de 2 capítulos completados").
-    - [ ] Navigate to a course with an S3/direct video chapter and confirm it still works correctly (no regression).
+    - [ ] Confirm the server console shows NO `[auth] verifyIdToken failed:` errors.
 
 - [ ] Task: Update documentation
-    - [ ] Update `docs/how-it-works.md` to reflect that YouTube chapters now also trigger completion tracking.
-    - [ ] Update `docs/business-rules.md` if any relevant business rules changed (e.g., note that completion works for both S3 and YouTube chapters).
+    - [ ] Update `docs/` to note that `FIREBASE_SERVICE_ACCOUNT` is required for progress tracking.
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Review & Documentation' (Protocol in workflow.md)
