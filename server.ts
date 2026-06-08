@@ -3,6 +3,7 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
+import crypto from "crypto";
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import multer from "multer";
@@ -57,7 +58,10 @@ export function createApp(): Express {
       return res.status(500).json({ error: "ADMIN_ACCESS not configured in server" });
     }
 
-    if (password === adminPassword) {
+    const providedHash = crypto.createHash('sha256').update(password || '').digest();
+    const adminHash = crypto.createHash('sha256').update(adminPassword).digest();
+
+    if (crypto.timingSafeEqual(providedHash, adminHash)) {
       // In a production app, we would return a JWT here.
       // For this MVP, we return a simple success flag.
       res.json({ success: true, message: "Acceso concedido" });
