@@ -4,7 +4,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 const { mocks } = vi.hoisted(() => ({
   mocks: {
     onAuthStateChanged: vi.fn(),
-    signIn: vi.fn(),
+    signInWithGoogle: vi.fn(),
+    signInWithMicrosoft: vi.fn(),
     logout: vi.fn(),
     fetchMock: vi.fn(),
   },
@@ -16,7 +17,8 @@ vi.mock('firebase/auth', () => ({
 
 vi.mock('../src/lib/firebase', () => ({
   auth: {},
-  signIn: (...args: any[]) => mocks.signIn(...args),
+  signInWithGoogle: (...args: any[]) => mocks.signInWithGoogle(...args),
+  signInWithMicrosoft: (...args: any[]) => mocks.signInWithMicrosoft(...args),
   logout: (...args: any[]) => mocks.logout(...args),
 }));
 
@@ -71,7 +73,8 @@ describe('App authentication flow', () => {
       return () => {};
     });
     render(<App />);
-    await waitFor(() => expect(screen.getByText(/Acceso Corporativo/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Acceso con Google/)).toBeInTheDocument());
+    expect(screen.getByText(/Acceso con Microsoft/)).toBeInTheDocument();
   });
 
   it('triggers signIn on click', async () => {
@@ -80,9 +83,12 @@ describe('App authentication flow', () => {
       return () => {};
     });
     render(<App />);
-    await waitFor(() => screen.getByText(/Acceso Corporativo/));
-    fireEvent.click(screen.getByRole('button', { name: /Acceso Corporativo/i }));
-    expect(mocks.signIn).toHaveBeenCalled();
+    await waitFor(() => screen.getByText(/Acceso con Google/));
+    fireEvent.click(screen.getByRole('button', { name: /Acceso con Google/i }));
+    expect(mocks.signInWithGoogle).toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: /Acceso con Microsoft/i }));
+    expect(mocks.signInWithMicrosoft).toHaveBeenCalled();
   });
 
   it('renders dashboard when user is allowed', async () => {

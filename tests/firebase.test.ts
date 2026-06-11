@@ -13,6 +13,10 @@ vi.mock('firebase/auth', () => ({
   GoogleAuthProvider: vi.fn().mockImplementation(function (this: any) {
     this.providerId = 'google.com';
   }),
+  OAuthProvider: vi.fn().mockImplementation(function (this: any, providerId: string) {
+    this.providerId = providerId;
+    this.setCustomParameters = vi.fn();
+  }),
   signInWithPopup: vi.fn(),
   signOut: vi.fn(),
 }));
@@ -30,14 +34,15 @@ vi.mock('firebase/storage', () => ({
 import {
   OperationType,
   handleFirestoreError,
-  signIn,
+  signInWithGoogle,
+  signInWithMicrosoft,
   logout,
   db,
   auth,
   storage,
   googleProvider,
 } from '../src/lib/firebase';
-import { signInWithPopup, signOut } from 'firebase/auth';
+import { signInWithPopup, signOut, OAuthProvider } from 'firebase/auth';
 
 beforeEach(() => {
   mockedAuth.currentUser = null;
@@ -111,17 +116,32 @@ describe('handleFirestoreError', () => {
   });
 });
 
-describe('signIn', () => {
+describe('signInWithGoogle', () => {
   it('returns the user on success', async () => {
     (signInWithPopup as any).mockResolvedValueOnce({ user: { uid: 'abc' } });
-    const user = await signIn();
+    const user = await signInWithGoogle();
     expect(user).toEqual({ uid: 'abc' });
   });
 
   it('rethrows on failure', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     (signInWithPopup as any).mockRejectedValueOnce(new Error('popup blocked'));
-    await expect(signIn()).rejects.toThrow('popup blocked');
+    await expect(signInWithGoogle()).rejects.toThrow('popup blocked');
+    errorSpy.mockRestore();
+  });
+});
+
+describe('signInWithMicrosoft', () => {
+  it('returns the user on success', async () => {
+    (signInWithPopup as any).mockResolvedValueOnce({ user: { uid: 'def' } });
+    const user = await signInWithMicrosoft();
+    expect(user).toEqual({ uid: 'def' });
+  });
+
+  it('rethrows on failure', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    (signInWithPopup as any).mockRejectedValueOnce(new Error('popup blocked'));
+    await expect(signInWithMicrosoft()).rejects.toThrow('popup blocked');
     errorSpy.mockRestore();
   });
 });
