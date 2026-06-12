@@ -410,4 +410,22 @@ describe('AdminPanel - edit existing course', () => {
     fireEvent.click(screen.getByRole('button', { name: /Guardar Cambios/i }));
     await waitFor(() => expect(mocks.setDoc).toHaveBeenCalled());
   });
+
+  it('rejects videos larger than 100MB', async () => {
+    const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    const user = userEvent.setup();
+    render(<AdminPanel isAdmin={true} setIsAdmin={vi.fn()} view="create" onViewChange={vi.fn()} />);
+
+    // Create a mock file with size > 100MB
+    const largeFile = new File(['a'.repeat(1024)], 'large.webm', { type: 'video/webm' });
+    Object.defineProperty(largeFile, 'size', { value: 101 * 1024 * 1024 });
+
+    const fileInput = screen.getByText(/Vídeo del Capítulo/i).parentElement?.parentElement?.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(fileInput).not.toBeNull();
+
+    await user.upload(fileInput, largeFile);
+
+    expect(alertMock).toHaveBeenCalledWith('El archivo es demasiado grande. El tamaño máximo permitido es 100MB.');
+    alertMock.mockRestore();
+  });
 });

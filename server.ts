@@ -151,7 +151,12 @@ export function createApp(): Express {
   });
 
   const storage = multer.memoryStorage();
-  const upload = multer({ storage });
+  const upload = multer({
+    storage,
+    limits: {
+      fileSize: 100 * 1024 * 1024, // 100MB limit
+    }
+  });
 
   // API Route to Upload using Node.js proxy to avoid S3 browser CORS
   app.post("/api/upload", upload.single("file"), async (req, res) => {

@@ -119,6 +119,12 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
       return;
     }
 
+    const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+    if (file.size > MAX_FILE_SIZE) {
+      alert('El archivo es demasiado grande. El tamaño máximo permitido es 100MB.');
+      return;
+    }
+
     const courseName = formData.title || 'untitled-course';
 
     setUploadingChapterIndex(index);
