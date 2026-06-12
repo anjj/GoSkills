@@ -1,4 +1,4 @@
-FROM node:22-alpine AS builder
+FROM node:22-slim AS builder
 
 WORKDIR /app
 
@@ -28,7 +28,7 @@ ENV VITE_FIREBASE_MEASUREMENT_ID=$VITE_FIREBASE_MEASUREMENT_ID
 COPY . .
 RUN npm run build
 
-FROM node:22-alpine
+FROM node:22-slim
 
 WORKDIR /app
 

@@ -14,3 +14,4 @@ This guide maps technical failure states to business impacts and troubleshooting
 | `Falta configurar CORS en S3` | S3 Browser Block | The S3 bucket lacks the CORS policy required for direct browser uploads. |
 | `El título es obligatorio` | Data Validation | Frontend prevents saving a course without a title. |
 | `Debes añadir al menos un capítulo` | Content Validation | Frontend prevents saving an empty course structure. |
+| `qemu: uncaught target signal 4 (Illegal instruction)` | CI/CD Emulation Crash | Docker build fails during emulation under QEMU due to Alpine musl libc constraints on modern Node V8. Change base image from `node:alpine` to `node:slim` to use glibc instead. |

@@ -1,0 +1,8 @@
+{
+  "track_id": "fix_ci_build_failure_20260612",
+  "type": "bug",
+  "status": "in_progress",
+  "created_at": "2026-06-12T09:55:00Z",
+  "updated_at": "2026-06-12T09:55:00Z",
+  "description": "Fix GitLab CI build failure due to QEMU arm64 emulation crash (uncaught target signal 4) on alpine base images."
+}
