@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
@@ -21,12 +21,29 @@ export const storage = getStorage(app);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-export async function signIn() {
+export async function signInWithGoogle() {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
   } catch (error) {
-    console.error("Error signing in:", error);
+    console.error("Error signing in with Google:", error);
+    throw error;
+  }
+}
+
+export async function signInWithMicrosoft() {
+  try {
+    const provider = new OAuthProvider('microsoft.com');
+    const tenantId = import.meta.env.VITE_MICROSOFT_TENANT_ID;
+    if (tenantId) {
+      provider.setCustomParameters({
+        tenant: tenantId
+      });
+    }
+    const result = await signInWithPopup(auth, provider);
+    return result.user;
+  } catch (error) {
+    console.error("Error signing in with Microsoft:", error);
     throw error;
   }
 }
