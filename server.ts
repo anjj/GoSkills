@@ -23,14 +23,33 @@ function getAdminApp(): App {
   if (adminApp) return adminApp;
   if (getApps().length) {
     adminApp = getApps()[0];
+    console.log('[firebase-admin] Reusing existing app');
     return adminApp;
   }
   const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
-  adminApp = initializeApp(
-    serviceAccount
-      ? { credential: cert(JSON.parse(serviceAccount)) }
-      : { credential: applicationDefault() }
-  );
+  try {
+    if (serviceAccount) {
+      // The value in .env may be stored as a JSON-encoded string (i.e. wrapped in outer quotes),
+      // so we may need to parse twice to get the actual service account object.
+      let parsed = JSON.parse(serviceAccount);
+      if (typeof parsed === 'string') {
+        parsed = JSON.parse(parsed);
+      }
+      // dotenv may store newlines as literal \n sequences; the private key requires real newlines
+      if (parsed.private_key) {
+        parsed.private_key = parsed.private_key.replace(/\\n/g, '\n');
+      }
+      console.log('[firebase-admin] Initializing with service account for project:', parsed.project_id);
+      adminApp = initializeApp({ credential: cert(parsed) });
+      console.log('[firebase-admin] Initialized successfully with service account credentials');
+    } else {
+      console.warn('[firebase-admin] FIREBASE_SERVICE_ACCOUNT not set — falling back to Application Default Credentials');
+      adminApp = initializeApp({ credential: applicationDefault() });
+    }
+  } catch (err) {
+    console.error('[firebase-admin] INITIALIZATION FAILED:', err instanceof Error ? err.message : err);
+    throw err;
+  }
   return adminApp;
 }
 
@@ -200,8 +219,11 @@ export function createApp(): Express {
     try {
       const decoded = await getAdminAuth().verifyIdToken(idToken);
       userId = decoded.uid;
-    } catch {
-      return res.status(401).json({ error: "invalid_token" });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const code = (err as any)?.code ?? 'unknown';
+      console.error('[auth] verifyIdToken failed — code:', code, '| message:', msg);
+      return res.status(401).json({ error: "invalid_token", detail: msg });
     }
 
     try {

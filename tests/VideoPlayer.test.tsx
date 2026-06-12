@@ -82,13 +82,15 @@ describe('VideoPlayer', () => {
     expect(screen.getByText('second chapter')).toBeInTheDocument();
   });
 
-  it('renders the YouTube iframe for YouTube URLs', async () => {
+  it('renders the standard video player for all chapter video URLs (no iframe)', async () => {
     render(<VideoPlayer course={sampleCourse} onBack={vi.fn()} />);
     fireEvent.click(screen.getByText('Second'));
     await waitFor(() => {
-      const iframe = document.querySelector('iframe');
-      expect(iframe).toBeTruthy();
-      expect(iframe?.getAttribute('src')).toContain('youtube.com/embed/abc');
+      // All chapters — including those with external URLs — use the CustomVideoPlayer
+      const video = document.querySelector('video');
+      expect(video).toBeTruthy();
+      // No iframe should exist
+      expect(document.querySelector('iframe')).toBeNull();
     });
   });
 

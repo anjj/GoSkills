@@ -87,6 +87,9 @@ beforeEach(() => {
   adminMocks.txUpdate.mockReset();
   adminMocks.chapters = [];
   process.env = { ...ORIGINAL_ENV };
+  // Ensure the real service account JSON is not used in tests;
+  // the firebase-admin modules are fully mocked via vi.mock above.
+  delete process.env.FIREBASE_SERVICE_ACCOUNT;
 });
 
 afterEach(() => {
