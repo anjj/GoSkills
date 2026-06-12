@@ -4,8 +4,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 const { mocks } = vi.hoisted(() => ({
   mocks: {
     onAuthStateChanged: vi.fn(),
-    signInWithGoogle: vi.fn(),
     signInWithMicrosoft: vi.fn(),
+    getMicrosoftRedirectResult: vi.fn(),
     logout: vi.fn(),
     fetchMock: vi.fn(),
   },
@@ -17,8 +17,8 @@ vi.mock('firebase/auth', () => ({
 
 vi.mock('../src/lib/firebase', () => ({
   auth: {},
-  signInWithGoogle: (...args: any[]) => mocks.signInWithGoogle(...args),
   signInWithMicrosoft: (...args: any[]) => mocks.signInWithMicrosoft(...args),
+  getMicrosoftRedirectResult: (...args: any[]) => mocks.getMicrosoftRedirectResult(...args),
   logout: (...args: any[]) => mocks.logout(...args),
 }));
 
@@ -54,6 +54,8 @@ import App from '../src/App';
 
 beforeEach(() => {
   Object.values(mocks).forEach((m: any) => m.mockReset?.());
+  // No pending redirect sign-in by default; tests that care override this.
+  mocks.getMicrosoftRedirectResult.mockResolvedValue(null);
   // @ts-ignore
   global.fetch = mocks.fetchMock;
 });
@@ -73,8 +75,8 @@ describe('App authentication flow', () => {
       return () => {};
     });
     render(<App />);
-    await waitFor(() => expect(screen.getByText(/Acceso con Google/)).toBeInTheDocument());
-    expect(screen.getByText(/Acceso con Microsoft/)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText(/Acceso con Microsoft/)).toBeInTheDocument());
+    expect(screen.queryByText(/Acceso con Google/)).not.toBeInTheDocument();
   });
 
   it('triggers signIn on click', async () => {
@@ -83,10 +85,7 @@ describe('App authentication flow', () => {
       return () => {};
     });
     render(<App />);
-    await waitFor(() => screen.getByText(/Acceso con Google/));
-    fireEvent.click(screen.getByRole('button', { name: /Acceso con Google/i }));
-    expect(mocks.signInWithGoogle).toHaveBeenCalled();
-
+    await waitFor(() => screen.getByText(/Acceso con Microsoft/));
     fireEvent.click(screen.getByRole('button', { name: /Acceso con Microsoft/i }));
     expect(mocks.signInWithMicrosoft).toHaveBeenCalled();
   });

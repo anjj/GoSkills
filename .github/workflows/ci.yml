@@ -159,3 +159,4 @@ jobs:
           SENTRY_DSN=${{ secrets.SENTRY_DSN }}
           FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}
           FIREBASE_DATABASE_URL=${{ secrets.VITE_FIREBASE_DATABASE_URL }}
+          FIREBASE_AUTH_PROXY_TARGET=${{ secrets.FIREBASE_AUTH_PROXY_TARGET }}

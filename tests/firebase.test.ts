@@ -10,14 +10,12 @@ vi.mock('firebase/app', () => ({
 
 vi.mock('firebase/auth', () => ({
   getAuth: vi.fn(() => mockedAuth),
-  GoogleAuthProvider: vi.fn().mockImplementation(function (this: any) {
-    this.providerId = 'google.com';
-  }),
   OAuthProvider: vi.fn().mockImplementation(function (this: any, providerId: string) {
     this.providerId = providerId;
     this.setCustomParameters = vi.fn();
   }),
-  signInWithPopup: vi.fn(),
+  signInWithRedirect: vi.fn(),
+  getRedirectResult: vi.fn(),
   signOut: vi.fn(),
 }));
 
@@ -34,15 +32,14 @@ vi.mock('firebase/storage', () => ({
 import {
   OperationType,
   handleFirestoreError,
-  signInWithGoogle,
   signInWithMicrosoft,
+  getMicrosoftRedirectResult,
   logout,
   db,
   auth,
   storage,
-  googleProvider,
 } from '../src/lib/firebase';
-import { signInWithPopup, signOut, OAuthProvider } from 'firebase/auth';
+import { signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth';
 
 beforeEach(() => {
   mockedAuth.currentUser = null;
@@ -61,11 +58,10 @@ describe('OperationType enum', () => {
 });
 
 describe('module exports', () => {
-  it('exports firebase singletons and provider', () => {
+  it('exports firebase singletons', () => {
     expect(db).toBeDefined();
     expect(auth).toBeDefined();
     expect(storage).toBeDefined();
-    expect(googleProvider).toBeDefined();
   });
 });
 
@@ -116,33 +112,27 @@ describe('handleFirestoreError', () => {
   });
 });
 
-describe('signInWithGoogle', () => {
-  it('returns the user on success', async () => {
-    (signInWithPopup as any).mockResolvedValueOnce({ user: { uid: 'abc' } });
-    const user = await signInWithGoogle();
-    expect(user).toEqual({ uid: 'abc' });
+describe('signInWithMicrosoft', () => {
+  it('triggers a redirect sign-in', async () => {
+    (signInWithRedirect as any).mockResolvedValueOnce(undefined);
+    await signInWithMicrosoft();
+    expect(signInWithRedirect).toHaveBeenCalled();
   });
 
   it('rethrows on failure', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    (signInWithPopup as any).mockRejectedValueOnce(new Error('popup blocked'));
-    await expect(signInWithGoogle()).rejects.toThrow('popup blocked');
+    (signInWithRedirect as any).mockRejectedValueOnce(new Error('redirect failed'));
+    await expect(signInWithMicrosoft()).rejects.toThrow('redirect failed');
     errorSpy.mockRestore();
   });
 });
 
-describe('signInWithMicrosoft', () => {
-  it('returns the user on success', async () => {
-    (signInWithPopup as any).mockResolvedValueOnce({ user: { uid: 'def' } });
-    const user = await signInWithMicrosoft();
-    expect(user).toEqual({ uid: 'def' });
-  });
-
-  it('rethrows on failure', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    (signInWithPopup as any).mockRejectedValueOnce(new Error('popup blocked'));
-    await expect(signInWithMicrosoft()).rejects.toThrow('popup blocked');
-    errorSpy.mockRestore();
+describe('getMicrosoftRedirectResult', () => {
+  it('delegates to firebase getRedirectResult', async () => {
+    (getRedirectResult as any).mockResolvedValueOnce({ user: { uid: 'ghi' } });
+    const result = await getMicrosoftRedirectResult();
+    expect(getRedirectResult).toHaveBeenCalledWith(auth);
+    expect(result).toEqual({ user: { uid: 'ghi' } });
   });
 });
 

@@ -5,7 +5,7 @@
 
 import { useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth, signInWithGoogle, signInWithMicrosoft, logout } from './lib/firebase';
+import { auth, signInWithMicrosoft, getMicrosoftRedirectResult, logout } from './lib/firebase';
 import { LogIn, LogOut, LayoutDashboard, User as UserIcon, Settings, Search, CheckCircle, Clock, Plus, Menu, X, BarChart3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Dashboard from './components/Dashboard';
@@ -43,17 +43,6 @@ function Logo({ className = "w-8 h-8" }: { className?: string }) {
   );
 }
 
-function GoogleIcon({ className = "w-5 h-5" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} xmlns="http://www.w3.org/2000/svg">
-      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
-      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-    </svg>
-  );
-}
-
 function MicrosoftIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg viewBox="0 0 21 21" className={className} xmlns="http://www.w3.org/2000/svg">
@@ -76,17 +65,33 @@ export default function App() {
   const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Complete any pending Microsoft redirect sign-in. If the redirect flow
+    // failed (e.g. token exchange / credential error), surface the real error
+    // code instead of the misleading auth/popup-closed-by-user.
+    getMicrosoftRedirectResult().catch((error: any) => {
+      console.error("Microsoft redirect sign-in failed:", error?.code, error);
+      setAuthError(`${error?.code ?? 'auth/error'}: ${error?.message ?? 'Error al iniciar sesión con Microsoft.'}`);
+    });
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      // TEMP: remove after the first successful production login is confirmed.
+      console.log('[diag] onAuthStateChanged user:', currentUser ? { uid: currentUser.uid, email: currentUser.email } : null);
       if (currentUser) {
         try {
+          // Some federated providers (e.g. a single-tenant Microsoft Entra app)
+          // don't return an email claim. Send the providerId so the server can
+          // trust an org-restricted provider when no email is present.
+          const providerId = currentUser.providerData?.[0]?.providerId ?? null;
           const response = await fetch('/api/auth/verify-domain', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: currentUser.email })
+            body: JSON.stringify({ email: currentUser.email, providerId })
           });
-          
+
           const result = await response.json();
-          
+          // TEMP: remove after the first successful production login is confirmed.
+          console.log('[diag] verify-domain result:', result, '| provider:', providerId);
+
           if (result.allowed) {
             setUser(currentUser);
             setAuthError(null);
@@ -106,6 +111,16 @@ export default function App() {
     });
     return () => unsubscribe();
   }, []);
+
+  const handleMicrosoftSignIn = async () => {
+    try {
+      setAuthError(null);
+      await signInWithMicrosoft();
+    } catch (err: any) {
+      console.error("Sign in failed:", err);
+      setAuthError(err.message || 'Error al iniciar sesión con Microsoft.');
+    }
+  };
 
   const handlePlayCourse = (course: Course) => {
     setSelectedCourse(course);
@@ -139,14 +154,7 @@ export default function App() {
           </p>
           <div className="space-y-4">
             <button
-              onClick={signInWithGoogle}
-              className="w-full flex items-center justify-center gap-3 bg-gray-900 hover:bg-black text-white py-4 px-6 rounded-xl font-bold transition-all shadow-xl shadow-gray-200 active:scale-[0.98] hover:scale-[1.02]"
-            >
-              <GoogleIcon />
-              Acceso con Google
-            </button>
-            <button
-              onClick={signInWithMicrosoft}
+              onClick={handleMicrosoftSignIn}
               className="w-full flex items-center justify-center gap-3 bg-gray-900 hover:bg-black text-white py-4 px-6 rounded-xl font-bold transition-all shadow-xl shadow-gray-200 active:scale-[0.98] hover:scale-[1.02]"
             >
               <MicrosoftIcon />
