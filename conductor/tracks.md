@@ -4,3 +4,6 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
+- [ ] **Track: Fix GitLab CI Build Failure**
+*Link: [./tracks/fix_ci_build_failure_20260612/](./tracks/fix_ci_build_failure_20260612/)*
+

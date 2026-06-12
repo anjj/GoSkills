@@ -30,3 +30,7 @@ This document defines the technology stack for the GoSkills project, derived fro
 - **Vitest (v4)**: Vite-native unit and integration test framework.
 - **React Testing Library**: For component testing.
 - **JSDOM**: Browser environment simulation for testing.
+
+## 6. Containerization & Deployment
+- **Docker**: Containerization tool for packaging and running the Express/React server.
+- **Node.js Base Image (`node:22-slim`)**: Uses a Debian-based slim image with `glibc` to ensure compatibility under QEMU-emulated `linux/arm64` container builds in CI pipelines (preventing SIGILL/illegal instruction crashes seen on `alpine` variants).
