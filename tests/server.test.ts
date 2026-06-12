@@ -163,6 +163,36 @@ describe('POST /api/auth/verify-domain', () => {
     expect(res.status).toBe(400);
   });
 
+  it('allows a trusted single-tenant provider when no email is present', async () => {
+    process.env.ALLOW_DOMAINS = 'onegolive.com';
+    const app = createApp();
+    const res = await request(app)
+      .post('/api/auth/verify-domain')
+      .send({ email: null, providerId: 'microsoft.com' });
+    expect(res.status).toBe(200);
+    expect(res.body.allowed).toBe(true);
+  });
+
+  it('still rejects a missing email from an untrusted provider', async () => {
+    process.env.ALLOW_DOMAINS = 'onegolive.com';
+    const app = createApp();
+    const res = await request(app)
+      .post('/api/auth/verify-domain')
+      .send({ email: null, providerId: 'some.other.com' });
+    expect(res.status).toBe(400);
+    expect(res.body.allowed).toBe(false);
+  });
+
+  it('still enforces the domain when a Microsoft email IS present', async () => {
+    process.env.ALLOW_DOMAINS = 'onegolive.com';
+    const app = createApp();
+    const res = await request(app)
+      .post('/api/auth/verify-domain')
+      .send({ email: 'user@evil.com', providerId: 'microsoft.com' });
+    expect(res.status).toBe(200);
+    expect(res.body.allowed).toBe(false);
+  });
+
   it('allows email matching configured domain (case-insensitive)', async () => {
     process.env.ALLOW_DOMAINS = 'GMAIL.com,company.io';
     const app = createApp();

@@ -1,5 +1,8 @@
 import express, { Express } from "express";
 import { createServer as createViteServer } from "vite";
+import { createProxyMiddleware } from "http-proxy-middleware";
+import https from "https";
+import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
@@ -65,6 +68,34 @@ function getAdminAuth(): Auth {
 export function createApp(): Express {
   const app = express();
 
+  // Reverse-proxy the Firebase Auth helper endpoints to the project's
+  // firebaseapp.com domain so they are served same-origin as the app. This is
+  // Firebase's recommended fix for signInWithRedirect on browsers that block
+  // third-party storage: with VITE_FIREBASE_AUTH_DOMAIN set to the app's own
+  // origin, the auth iframe/handler load here and the credential carries back.
+  // Mounted before express.json() so request bodies are streamed untouched, and
+  // before the Vite/static middleware so /__/auth/* is never treated as an app
+  // route. Transparent (no 302) — the handler's own redirects pass through.
+  const authProxyTarget = process.env.FIREBASE_AUTH_PROXY_TARGET;
+  if (authProxyTarget) {
+    app.use(
+      createProxyMiddleware({
+        pathFilter: ["/__/auth/**", "/__/firebase/**"],
+        target: authProxyTarget,
+        changeOrigin: true,
+        secure: true,
+        on: {
+          proxyRes: (proxyRes) => {
+            // Firebase serves HSTS on these endpoints. Forwarding it from a
+            // self-signed-cert localhost would pin HSTS and remove the browser's
+            // "proceed anyway" bypass — bricking dev after the first load.
+            delete proxyRes.headers["strict-transport-security"];
+          },
+        },
+      })
+    );
+  }
+
   app.use(express.json());
 
   // API Route for Admin Verification
@@ -87,7 +118,7 @@ export function createApp(): Express {
 
   // API Route for Domain Verification
   app.post("/api/auth/verify-domain", (req, res) => {
-    const { email } = req.body;
+    const { email, providerId } = req.body;
     const allowedDomains = process.env.ALLOW_DOMAINS;
 
     // If no domains are configured, allow all
@@ -96,6 +127,15 @@ export function createApp(): Express {
     }
 
     if (!email || !email.includes("@")) {
+      // Some federated identity providers are already restricted to the org at
+      // the IdP level (e.g. a single-tenant Microsoft Entra app only issues
+      // tokens to members of that tenant) and may not return an email claim.
+      // For those, the tenant restriction is equivalent to the domain check, so
+      // allow the sign-in when no email is available.
+      const TRUSTED_FEDERATED_PROVIDERS = ["microsoft.com"];
+      if (providerId && TRUSTED_FEDERATED_PROVIDERS.includes(providerId)) {
+        return res.json({ allowed: true });
+      }
       return res.status(400).json({ allowed: false, error: "Invalid email" });
     }
 
@@ -297,24 +337,54 @@ async function startServer() {
   const app = createApp();
   const PORT = process.env.PORT || "3000";
 
-  // Vite integration
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
+  if (process.env.NODE_ENV === "production") {
+    // Production: serve the built SPA over HTTP; TLS is terminated upstream
+    // (e.g. Cloud Run). The /__/auth proxy above still applies.
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
     app.get("*", (req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
     });
+    app.listen(Number(PORT), "0.0.0.0", () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+    return;
   }
 
-  app.listen(Number(PORT), "0.0.0.0", () => {
-    console.log(`Server running on port ${PORT}`);
-  });
+  // Local dev. Serve over HTTPS when a self-signed cert is present so the
+  // Firebase signInWithRedirect handler (hard-coded to HTTPS for a localhost
+  // authDomain) works through the /__/auth proxy. Run `npm run gen-cert` to
+  // create the cert (the predev script does this automatically).
+  const keyPath = path.join(process.cwd(), "certs", "localhost-key.pem");
+  const certPath = path.join(process.cwd(), "certs", "localhost-cert.pem");
+  const useHttps = fs.existsSync(keyPath) && fs.existsSync(certPath);
+
+  if (useHttps) {
+    const httpsServer = https.createServer(
+      { key: fs.readFileSync(keyPath), cert: fs.readFileSync(certPath) },
+      app
+    );
+    const vite = await createViteServer({
+      server: { middlewareMode: true, hmr: { server: httpsServer } },
+      appType: "spa",
+    });
+    app.use(vite.middlewares);
+    httpsServer.listen(Number(PORT), "0.0.0.0", () => {
+      console.log(`Server running on https://localhost:${PORT}`);
+    });
+  } else {
+    console.warn(
+      "[server] No TLS cert found in certs/ — serving HTTP. Microsoft signInWithRedirect needs HTTPS locally; run `npm run gen-cert`."
+    );
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "spa",
+    });
+    app.use(vite.middlewares);
+    app.listen(Number(PORT), "0.0.0.0", () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  }
 }
 
 const isDirectRun =

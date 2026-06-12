@@ -19,6 +19,7 @@ This plan outlines the steps required to resolve the GitLab CI build failure for
 - [x] Task: Update `.github/workflows/ci.yml` to pass `VITE_MICROSOFT_TENANT_ID` to the docker build-args from GitHub Secrets.
 
 ## Phase 5: Verification and Review
+- [x] Task: Update `App.tsx` to catch login errors and display them in the UI.
 - [x] Task: Run `npm test` to verify that all tests pass locally.
 - [x] Task: Invoke the `doc-driven-review` skill to perform cross-domain impact review. (Executed, no business domains impacted, only Infrastructure/CI-CD).
 - [x] Task: Conductor - User Manual Verification 'Fix GitLab CI Build Failure' (Protocol in workflow.md)

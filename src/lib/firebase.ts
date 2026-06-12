@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { getAuth, OAuthProvider, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
@@ -19,17 +19,6 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const storage = getStorage(app);
 export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
-
-export async function signInWithGoogle() {
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    return result.user;
-  } catch (error) {
-    console.error("Error signing in with Google:", error);
-    throw error;
-  }
-}
 
 export async function signInWithMicrosoft() {
   try {
@@ -40,12 +29,23 @@ export async function signInWithMicrosoft() {
         tenant: tenantId
       });
     }
-    const result = await signInWithPopup(auth, provider);
-    return result.user;
+    // Redirect (rather than popup) flow: the popup was closing on the return
+    // trip from the Firebase auth handler with auth/popup-closed-by-user and
+    // never surfaced the underlying error. Redirect avoids the popup<->opener
+    // cross-origin handoff, and getMicrosoftRedirectResult() reports the real
+    // error (or completes the sign-in) when the app reloads.
+    await signInWithRedirect(auth, provider);
   } catch (error) {
     console.error("Error signing in with Microsoft:", error);
     throw error;
   }
+}
+
+// Call once on app load to complete a pending Microsoft redirect sign-in.
+// Resolves with the UserCredential (or null if no redirect is pending), and
+// rejects with the real auth error if the redirect sign-in failed.
+export function getMicrosoftRedirectResult() {
+  return getRedirectResult(auth);
 }
 
 export async function logout() {
