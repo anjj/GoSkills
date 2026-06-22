@@ -74,8 +74,6 @@ export default function App() {
     });
 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      // TEMP: remove after the first successful production login is confirmed.
-      console.log('[diag] onAuthStateChanged user:', currentUser ? { uid: currentUser.uid, email: currentUser.email } : null);
       if (currentUser) {
         try {
           // Some federated providers (e.g. a single-tenant Microsoft Entra app)
@@ -89,8 +87,6 @@ export default function App() {
           });
 
           const result = await response.json();
-          // TEMP: remove after the first successful production login is confirmed.
-          console.log('[diag] verify-domain result:', result, '| provider:', providerId);
 
           if (result.allowed) {
             setUser(currentUser);
