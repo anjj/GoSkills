@@ -9,10 +9,11 @@ interface CustomVideoPlayerProps {
   src?: string;
   poster?: string;
   onEnded?: () => void;
+  onPlayStart?: () => void;
   key?: React.Key;
 }
 
-function CustomVideoPlayer({ src, poster, onEnded }: CustomVideoPlayerProps) {
+function CustomVideoPlayer({ src, poster, onEnded, onPlayStart }: CustomVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -188,7 +189,10 @@ function CustomVideoPlayer({ src, poster, onEnded }: CustomVideoPlayerProps) {
         poster={poster}
         className="w-full h-full object-contain cursor-pointer"
         onClick={handlePlayPause}
-        onPlay={() => setIsPlaying(true)}
+        onPlay={() => {
+          setIsPlaying(true);
+          onPlayStart?.();
+        }}
         onPause={() => setIsPlaying(false)}
         onTimeUpdate={handleTimeUpdate}
         onEnded={triggerEnded}
@@ -279,6 +283,23 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
     loadCompletions();
   }, [course.id, chapters]);
 
+  const markCourseStarted = async () => {
+    if (!auth.currentUser || !course.id) return;
+    try {
+      const token = await auth.currentUser.getIdToken();
+      await fetch('/api/progress/course-started', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ courseId: course.id }),
+      });
+    } catch (error) {
+      console.error("Error starting course:", error);
+    }
+  };
+
   const markChapterCompleted = async (chapterId: string) => {
     if (!auth.currentUser || !chapterId) return;
     if (completedChapters.includes(chapterId)) return;
@@ -332,6 +353,7 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
                     key={currentChapter.videoUrl || 'empty'}
                     poster={course.thumbnailUrl}
                     onEnded={() => markChapterCompleted(currentChapter.id)}
+                    onPlayStart={markCourseStarted}
                   />
                 </motion.div>
               </AnimatePresence>

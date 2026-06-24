@@ -100,7 +100,14 @@ export function createApp(): Express {
   app.use(express.json());
 
   // API Route for Admin Verification
-  app.post("/api/admin/verify", (req, res) => {
+  app.post("/api/admin/verify", async (req, res) => {
+    const authHeader = req.headers.authorization || "";
+    const match = authHeader.match(/^Bearer (.+)$/);
+    if (!match) {
+      return res.status(401).json({ error: "missing_token" });
+    }
+    const idToken = match[1];
+
     const { password } = req.body;
     const adminPassword = process.env.ADMIN_ACCESS;
 
@@ -112,9 +119,14 @@ export function createApp(): Express {
     const adminHash = crypto.createHash('sha256').update(adminPassword).digest();
 
     if (crypto.timingSafeEqual(providedHash, adminHash)) {
-      // In a production app, we would return a JWT here.
-      // For this MVP, we return a simple success flag.
-      res.json({ success: true, message: "Acceso concedido" });
+      try {
+        const decoded = await getAdminAuth().verifyIdToken(idToken);
+        // Set the custom claim to true to allow Firestore rule checks
+        await getAdminAuth().setCustomUserClaims(decoded.uid, { admin: true });
+        res.json({ success: true, message: "Acceso concedido" });
+      } catch (err) {
+        return res.status(401).json({ success: false, message: "Token inválido" });
+      }
     } else {
       res.status(401).json({ success: false, message: "Contraseña incorrecta" });
     }
@@ -246,6 +258,48 @@ export function createApp(): Express {
     } catch (error) {
       console.error("Error generating read presigned URL:", error);
       res.status(500).json({ error: "Failed to generate presigned URL for video" });
+    }
+  });
+
+  app.post("/api/progress/course-started", async (req, res) => {
+    const authHeader = req.headers.authorization || "";
+    const match = authHeader.match(/^Bearer (.+)$/);
+    if (!match) {
+      return res.status(401).json({ error: "missing_token" });
+    }
+    const idToken = match[1];
+
+    const { courseId } = req.body ?? {};
+    if (typeof courseId !== "string" || !courseId) {
+      return res.status(400).json({ error: "invalid_body" });
+    }
+
+    let userId: string;
+    try {
+      const decoded = await getAdminAuth().verifyIdToken(idToken);
+      userId = decoded.uid;
+    } catch (err) {
+      return res.status(401).json({ error: "invalid_token" });
+    }
+
+    try {
+      const db = getAdminDb();
+      await db.runTransaction(async (tx) => {
+        const progressRef = db.doc(`users/${userId}/progress/${courseId}`);
+        const progressSnap = await tx.get(progressRef);
+        
+        if (!progressSnap.exists) {
+          tx.set(progressRef, {
+            courseId,
+            status: "in_progress",
+            startedAt: FieldValue.serverTimestamp(),
+          });
+        }
+      });
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error starting course progress:", error);
+      res.status(500).json({ error: "Failed to record course start" });
     }
   });
 

@@ -65,6 +65,10 @@ service cloud.firestore {
       }
     }
 
+    match /{path=**}/progress/{courseId} {
+      allow read: if isAdmin();
+    }
+
     // 2. Courses Collection
     match /courses/{courseId} {
       allow list: if isSignedIn();
