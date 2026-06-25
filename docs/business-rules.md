@@ -13,3 +13,8 @@
 ## Data Invariants
 - **Email Immutability**: A user's email is set at creation and cannot be changed.
 - **Progress Ownership**: Users can only read and write their own progress documents.
+
+## Progress & Statistics
+- **Course Enrollment ("Inscrito")**: A user is considered enrolled in a course the moment they open the video player to see the course content.
+- **Active Course**: A course is considered active for a user if they have started it but not yet completed all of its chapters.
+- **Course Completion**: A course is only marked as completed when a user finishes watching every single video (chapter) within that course.

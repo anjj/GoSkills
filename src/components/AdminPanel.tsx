@@ -1,7 +1,7 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { db, storage, handleFirestoreError, OperationType } from '../lib/firebase';
+import { db, storage, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Chapter, Course } from '../types';
 import { Plus, Video, Image as ImageIcon, Type, FileText, Clock, Hash, Check, Lock, Trash2, Upload, AlertCircle, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -80,16 +80,23 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
 
   const handleVerify = async (e: FormEvent) => {
     e.preventDefault();
+    if (!auth.currentUser) return;
+    
     setVerifying(true);
     setAuthError('');
     try {
+      const token = await auth.currentUser.getIdToken();
       const res = await fetch('/api/admin/verify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ password })
       });
       const data = await res.json();
       if (data.success) {
+        await auth.currentUser.getIdToken(true); // Force refresh to get admin claim
         setIsAdmin(true);
       } else {
         setAuthError(data.message || 'Error de autenticación');
