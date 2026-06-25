@@ -35,6 +35,11 @@ vi.mock('firebase/storage', () => ({
 vi.mock('../src/lib/firebase', () => ({
   db: {},
   storage: {},
+  auth: {
+    currentUser: {
+      getIdToken: vi.fn().mockResolvedValue('fake-token'),
+    }
+  },
   handleFirestoreError: (...args: any[]) => mocks.handleFirestoreError(...args),
   OperationType: { CREATE: 'create', WRITE: 'write', DELETE: 'delete' },
 }));

@@ -6,6 +6,7 @@ const { sendMock, getSignedUrlMock, adminMocks } = vi.hoisted(() => ({
   getSignedUrlMock: vi.fn(),
   adminMocks: {
     verifyIdToken: vi.fn(),
+    setCustomUserClaims: vi.fn(),
     chapters: [] as { id: string }[],
     txSet: vi.fn(),
     txUpdate: vi.fn(),
@@ -43,7 +44,10 @@ vi.mock('firebase-admin/app', () => ({
 }));
 
 vi.mock('firebase-admin/auth', () => ({
-  getAuth: vi.fn(() => ({ verifyIdToken: (...a: any[]) => adminMocks.verifyIdToken(...a) })),
+  getAuth: vi.fn(() => ({ 
+    verifyIdToken: (...a: any[]) => adminMocks.verifyIdToken(...a),
+    setCustomUserClaims: (...a: any[]) => adminMocks.setCustomUserClaims(...a) 
+  })),
 }));
 
 // A minimal fake transaction that exercises the real endpoint logic: the course
@@ -83,6 +87,7 @@ beforeEach(() => {
   sendMock.mockReset();
   getSignedUrlMock.mockReset();
   adminMocks.verifyIdToken.mockReset();
+  adminMocks.setCustomUserClaims.mockReset();
   adminMocks.txSet.mockReset();
   adminMocks.txUpdate.mockReset();
   adminMocks.chapters = [];
@@ -97,36 +102,65 @@ afterEach(() => {
 });
 
 describe('POST /api/admin/verify', () => {
+  beforeEach(() => {
+    adminMocks.verifyIdToken.mockResolvedValue({ uid: 'admin-1' });
+  });
+
+  it('returns 401 when Authorization header is missing', async () => {
+    process.env.ADMIN_ACCESS = 'secret123';
+    const app = createApp();
+    const res = await request(app).post('/api/admin/verify').send({ password: 'secret123' });
+    expect(res.status).toBe(401);
+    expect(res.body.error).toBe('missing_token');
+  });
+
   it('returns 500 when ADMIN_ACCESS is not configured', async () => {
     delete process.env.ADMIN_ACCESS;
     const app = createApp();
-    const res = await request(app).post('/api/admin/verify').send({ password: 'whatever' });
+    const res = await request(app)
+      .post('/api/admin/verify')
+      .set('Authorization', 'Bearer token')
+      .send({ password: 'whatever' });
     expect(res.status).toBe(500);
     expect(res.body.error).toMatch(/ADMIN_ACCESS/);
   });
 
-  it('returns success when password matches ADMIN_ACCESS', async () => {
+  it('returns success and sets custom claim when password matches ADMIN_ACCESS', async () => {
     process.env.ADMIN_ACCESS = 'secret123';
     const app = createApp();
-    const res = await request(app).post('/api/admin/verify').send({ password: 'secret123' });
+    const res = await request(app)
+      .post('/api/admin/verify')
+      .set('Authorization', 'Bearer token')
+      .send({ password: 'secret123' });
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ success: true, message: 'Acceso concedido' });
+    expect(adminMocks.verifyIdToken).toHaveBeenCalledWith('token');
+    expect(adminMocks.setCustomUserClaims).toHaveBeenCalledWith('admin-1', { admin: true });
   });
 
   it('returns 401 when password is wrong', async () => {
     process.env.ADMIN_ACCESS = 'secret123';
     const app = createApp();
-    const res = await request(app).post('/api/admin/verify').send({ password: 'wrong' });
+    const res = await request(app)
+      .post('/api/admin/verify')
+      .set('Authorization', 'Bearer token')
+      .send({ password: 'wrong' });
     expect(res.status).toBe(401);
     expect(res.body.success).toBe(false);
     expect(res.body.message).toBe('Contraseña incorrecta');
   });
 
-  it('returns 401 when password is missing', async () => {
+  it('returns 401 when token verification fails', async () => {
+    adminMocks.verifyIdToken.mockRejectedValue(new Error('bad token'));
     process.env.ADMIN_ACCESS = 'secret123';
     const app = createApp();
-    const res = await request(app).post('/api/admin/verify').send({});
+    const res = await request(app)
+      .post('/api/admin/verify')
+      .set('Authorization', 'Bearer token')
+      .send({ password: 'secret123' });
     expect(res.status).toBe(401);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe('Token inválido');
   });
 });
 
