@@ -68,8 +68,8 @@ export default function AdminStats() {
       className="space-y-8"
     >
       <div>
-        <h1 className="text-3xl font-display font-bold text-gray-900">Estadísticas</h1>
-        <p className="text-gray-500">Analiza el rendimiento y la participación en los cursos.</p>
+        <h1 className="text-3xl  font-bold text-ink-strong">Estadísticas</h1>
+        <p className="text-ink-soft">Analiza el rendimiento y la participación en los cursos.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -79,16 +79,16 @@ export default function AdminStats() {
         <StatCard icon={<BarChart3 className="text-brand" />} label="Tasa de Finalización" value={`${completionRate}%`} />
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-gray-100 bg-gray-50/50">
-          <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+      <div className="bg-bg rounded-[3px] border border-rule shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-rule bg-bg-alt/50">
+          <h2 className="text-lg font-bold text-ink-strong flex items-center gap-2">
             <BarChart3 className="text-brand" size={20} />
             Desglose por Curso
           </h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-white text-gray-400 font-bold uppercase tracking-wider text-xs border-b border-gray-100">
+            <thead className="bg-bg text-ink-mute font-bold uppercase tracking-wider text-xs border-b border-rule">
               <tr>
                 <th className="px-6 py-4">Curso</th>
                 <th className="px-6 py-4 text-center">Inscripciones</th>
@@ -99,10 +99,10 @@ export default function AdminStats() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {courseStats.map(stat => (
-                <tr key={stat.id} className="hover:bg-gray-50/80 transition-colors">
-                  <td className="px-6 py-4 font-bold text-gray-900">
+                <tr key={stat.id} className="hover:bg-bg-alt/80 transition-colors">
+                  <td className="px-6 py-4 font-bold text-ink-strong">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-200">
+                      <div className="w-10 h-10 rounded-[3px] bg-bg-soft overflow-hidden flex-shrink-0 border border-rule">
                          {stat.thumbnailUrl ? (
                             <img src={stat.thumbnailUrl} alt="" className="w-full h-full object-cover" />
                          ) : (
@@ -113,7 +113,7 @@ export default function AdminStats() {
                       </div>
                       <div>
                         {stat.title}
-                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">{stat.category}</div>
+                        <div className="text-[10px] font-bold text-ink-mute uppercase tracking-wider mt-0.5">{stat.category}</div>
                       </div>
                     </div>
                   </td>
@@ -122,7 +122,7 @@ export default function AdminStats() {
                   <td className="px-6 py-4 text-center font-medium text-green-600">{stat.completed}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="flex-1 h-2.5 bg-bg-soft rounded-full overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${stat.rate}%` }}
@@ -130,7 +130,7 @@ export default function AdminStats() {
                           className="h-full bg-brand rounded-full"
                         />
                       </div>
-                      <span className="text-xs font-bold text-gray-500 w-8 text-right">{stat.rate}%</span>
+                      <span className="text-xs font-bold text-ink-soft w-8 text-right">{stat.rate}%</span>
                     </div>
                   </td>
                 </tr>
@@ -138,7 +138,7 @@ export default function AdminStats() {
               {courseStats.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center">
-                    <div className="flex flex-col items-center justify-center text-gray-400">
+                    <div className="flex flex-col items-center justify-center text-ink-mute">
                       <BarChart3 size={32} className="mb-2 opacity-50" />
                       <p>No hay datos disponibles.</p>
                     </div>
@@ -157,14 +157,14 @@ function StatCard({ icon, label, value }: { icon: ReactNode, label: string, valu
   return (
     <motion.div
       whileHover={{ y: -2 }}
-      className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4 transition-all hover:shadow-md"
+      className="bg-bg p-6 rounded-[3px] border border-rule shadow-sm flex items-center gap-4 transition-all hover:shadow-md"
     >
-      <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-gray-100">
+      <div className="w-12 h-12 bg-bg-alt rounded-[3px] flex items-center justify-center flex-shrink-0 border border-rule">
         {icon}
       </div>
       <div>
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{label}</p>
-        <p className="text-2xl font-display font-bold text-gray-900 leading-none">{value}</p>
+        <p className="text-[10px] font-bold text-ink-mute uppercase tracking-widest mb-1">{label}</p>
+        <p className="text-2xl  font-bold text-ink-strong leading-none">{value}</p>
       </div>
     </motion.div>
   );

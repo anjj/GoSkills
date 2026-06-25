@@ -127,7 +127,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-bg-alt flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-brand/20 border-t-brand rounded-full animate-spin" />
       </div>
     );
@@ -135,23 +135,23 @@ export default function App() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50/50 px-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-bg-alt/50 px-4">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center max-w-md w-full bg-white p-12 rounded-3xl shadow-2xl shadow-brand/5 border border-gray-100"
+          className="text-center max-w-md w-full bg-bg p-12 rounded-3xl shadow-2xl shadow-brand/5 border border-rule"
           id="login-container"
         >
           <div className="flex justify-center mb-10" id="logo-container">
             <img src="/logo.png" alt="golive" className="h-16 w-auto object-contain" />
           </div>
-          <p className="text-gray-500 mb-10 text-lg max-w-sm mx-auto leading-relaxed font-medium">
+          <p className="text-ink-soft mb-10 text-lg max-w-sm mx-auto leading-relaxed font-medium">
             making life easier.
           </p>
           <div className="space-y-4">
             <button
               onClick={handleMicrosoftSignIn}
-              className="w-full flex items-center justify-center gap-3 bg-gray-900 hover:bg-black text-white py-4 px-6 rounded-xl font-bold transition-all shadow-xl shadow-gray-200 active:scale-[0.98] hover:scale-[1.02]"
+              className="w-full flex items-center justify-center gap-3 bg-ink-strong hover:bg-black text-white py-4 px-6 rounded-[3px] font-bold transition-all shadow-xl shadow-ink/10 active:scale-[0.98] hover:scale-[1.02]"
             >
               <MicrosoftIcon />
               Acceso con Microsoft
@@ -162,13 +162,13 @@ export default function App() {
             <motion.div 
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              className="mt-4 p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-medium"
+              className="mt-4 p-4 bg-red-50 border border-red-100 rounded-[3px] text-red-600 text-sm font-medium"
             >
               {authError}
             </motion.div>
           )}
 
-          <p className="mt-8 text-xs text-gray-400 uppercase tracking-widest font-medium">
+          <p className="mt-8 text-xs text-ink-mute uppercase tracking-widest font-medium">
             Solo cuentas corporativas
           </p>
         </motion.div>
@@ -177,9 +177,9 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-bg-alt flex">
       {/* Sidebar navigation */}
-      <aside className="w-72 bg-white border-r border-gray-50 hidden lg:flex flex-col fixed inset-y-0 z-40 shadow-xl shadow-gray-100/50">
+      <aside className="w-72 bg-bg border-r border-rule-soft hidden lg:flex flex-col fixed inset-y-0 z-40 shadow-xl shadow-ink/5/50">
         <div className="p-8">
           <div className="flex items-center gap-3 mb-16 px-2">
             <img src="/logo.png" alt="golive" className="h-8 w-auto object-contain" />
@@ -232,10 +232,10 @@ export default function App() {
           </nav>
         </div>
 
-        <div className="mt-auto p-8 border-t border-gray-50">
+        <div className="mt-auto p-8 border-t border-rule-soft">
           <button 
             onClick={logout}
-            className="w-full flex items-center gap-3 px-3 py-2 text-gray-500 hover:text-brand hover:bg-gray-50 rounded-lg transition-colors font-bold text-sm"
+            className="w-full flex items-center gap-3 px-3 py-2 text-ink-soft hover:text-brand hover:bg-bg-alt rounded-[3px] transition-colors font-bold text-sm"
           >
             <LogOut size={18} />
             Cerrar Sesión
@@ -259,13 +259,13 @@ export default function App() {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed left-0 top-0 bottom-0 w-80 bg-white z-50 lg:hidden flex flex-col p-8"
+              className="fixed left-0 top-0 bottom-0 w-80 bg-bg z-50 lg:hidden flex flex-col p-8"
             >
               <div className="flex items-center justify-between mb-12">
                 <div className="flex items-center gap-3 px-2">
                   <img src="/logo.png" alt="golive" className="h-8 w-auto object-contain" />
                 </div>
-                <button onClick={closeMenu} className="p-2 text-gray-400 hover:text-gray-900 rounded-lg hover:bg-gray-50">
+                <button onClick={closeMenu} className="p-2 text-ink-mute hover:text-ink-strong rounded-[3px] hover:bg-bg-alt">
                   <X size={24} />
                 </button>
               </div>
@@ -319,10 +319,10 @@ export default function App() {
                 )}
               </nav>
 
-              <div className="mt-auto pt-8 border-t border-gray-50">
+              <div className="mt-auto pt-8 border-t border-rule-soft">
                 <button
                   onClick={logout}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all font-bold"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-ink-soft hover:text-red-500 hover:bg-red-50 rounded-[3px] transition-all font-bold"
                 >
                   <LogOut size={20} />
                   Cerrar Sesión
@@ -335,15 +335,15 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 lg:ml-72 min-h-screen">
-        <header className="h-20 bg-white/80 border-b border-gray-100 flex items-center justify-between px-8 sticky top-0 z-40 backdrop-blur-xl">
+        <header className="h-20 bg-bg/80 border-b border-rule flex items-center justify-between px-8 sticky top-0 z-40 backdrop-blur-xl">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setIsMenuOpen(true)}
-              className="lg:hidden p-2 text-gray-400 hover:text-brand transition-colors"
+              className="lg:hidden p-2 text-ink-mute hover:text-brand transition-colors"
             >
               <Menu size={24} />
             </button>
-            <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] bg-gray-50 px-4 py-2 rounded-lg hidden sm:block border border-gray-100">
+            <h2 className="text-[10px] font-black text-ink-mute uppercase tracking-[0.2em] bg-bg-alt px-4 py-2 rounded-[3px] hidden sm:block border border-rule">
               {currentView === 'dashboard' && 'Explorar Cursos'}
               {currentView === 'profile' && 'Tu Actividad'}
               {currentView === 'admin' && 'Gestión de Contenido'}
@@ -356,7 +356,7 @@ export default function App() {
                 setCurrentView('admin');
                 if (isAdmin) setAdminView('create');
               }}
-              className="hidden sm:flex items-center gap-2 text-[10px] font-black text-gray-400 hover:text-brand transition-colors uppercase tracking-[0.2em] px-4 py-2 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-100"
+              className="hidden sm:flex items-center gap-2 text-[10px] font-black text-ink-mute hover:text-brand transition-colors uppercase tracking-[0.2em] px-4 py-2 rounded-[3px] hover:bg-bg-alt border border-transparent hover:border-rule"
             >
               {isAdmin ? (
                 <>
@@ -371,15 +371,15 @@ export default function App() {
               )}
             </button>
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-semibold text-gray-900 leading-none">{user.displayName}</p>
-              <p className="text-xs text-gray-500">{user.email}</p>
+              <p className="text-sm font-semibold text-ink-strong leading-none">{user.displayName}</p>
+              <p className="text-xs text-ink-soft">{user.email}</p>
             </div>
             {user.photoURL && (
-              <img src={user.photoURL} alt="User profile" className="w-8 h-8 rounded-full border border-gray-200" />
+              <img src={user.photoURL} alt="User profile" className="w-8 h-8 rounded-full border border-rule" />
             )}
             <button
               onClick={logout}
-              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+              className="p-2 text-ink-mute hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
               title="Cerrar Sesión"
             >
               <LogOut size={20} />
@@ -425,13 +425,13 @@ function NavItem({ active, onClick, icon, label }: { active: boolean, onClick: (
     <button
       id="nav-item-button"
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm ${
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-[3px] transition-all font-bold text-sm ${
         active 
           ? 'bg-brand text-white shadow-xl shadow-brand/10 scale-[1.02]'
-          : 'text-gray-400 hover:text-brand hover:bg-brand/5'
+          : 'text-ink-mute hover:text-brand hover:bg-brand/5'
       }`}
     >
-      <span className={active ? 'text-white' : 'text-gray-400 transition-colors group-hover:text-brand'}>
+      <span className={active ? 'text-white' : 'text-ink-mute transition-colors group-hover:text-brand'}>
         {icon}
       </span>
       {label}

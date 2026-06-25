@@ -155,7 +155,7 @@ function CustomVideoPlayer({ src, poster, onEnded, onPlayStart }: CustomVideoPla
 
   if (!src) {
     return (
-      <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center text-gray-500 aspect-video">
+      <div className="w-full h-full bg-ink-strong flex flex-col items-center justify-center text-ink-soft aspect-video">
         <BookText size={48} className="mb-4 opacity-50" />
         <p className="font-bold uppercase tracking-widest text-sm">Contenido solo de lectura</p>
       </div>
@@ -164,7 +164,7 @@ function CustomVideoPlayer({ src, poster, onEnded, onPlayStart }: CustomVideoPla
 
   if (hasError) {
     return (
-      <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center text-gray-500 aspect-video">
+      <div className="w-full h-full bg-ink-strong flex flex-col items-center justify-center text-ink-soft aspect-video">
         <p className="font-bold uppercase tracking-widest text-sm mb-2">Error al cargar el video</p>
         <p className="text-xs max-w-sm text-center">El formato no es compatible o el enlace es inválido.</p>
       </div>
@@ -179,7 +179,7 @@ function CustomVideoPlayer({ src, poster, onEnded, onPlayStart }: CustomVideoPla
       onMouseLeave={() => isPlaying && setShowControls(false)}
     >
       {!presignedSrc && src && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10 text-brand">
+        <div className="absolute inset-0 flex items-center justify-center bg-ink-strong z-10 text-brand">
            <div className="w-10 h-10 border-4 border-white/20 border-t-brand rounded-full animate-spin" />
         </div>
       )}
@@ -211,7 +211,7 @@ function CustomVideoPlayer({ src, poster, onEnded, onPlayStart }: CustomVideoPla
           max="100"
           value={progress || 0}
           onChange={handleProgressChange}
-          className="w-full h-1 mb-4 accent-brand cursor-pointer appearance-none bg-white/30 rounded-full"
+          className="w-full h-1 mb-4 accent-brand cursor-pointer appearance-none bg-bg/30 rounded-full"
         />
         
         <div className="flex items-center justify-between text-white">
@@ -231,7 +231,7 @@ function CustomVideoPlayer({ src, poster, onEnded, onPlayStart }: CustomVideoPla
                 step="0.05"
                 value={isMuted ? 0 : volume}
                 onChange={handleVolumeChange}
-                className="w-20 h-1 accent-brand cursor-pointer appearance-none bg-white/30 rounded-full opacity-0 group-hover/volume:opacity-100 transition-opacity absolute left-8"
+                className="w-20 h-1 accent-brand cursor-pointer appearance-none bg-bg/30 rounded-full opacity-0 group-hover/volume:opacity-100 transition-opacity absolute left-8"
               />
             </div>
           </div>
@@ -329,7 +329,7 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
     <div className="max-w-6xl mx-auto pb-20">
       <button 
         onClick={onBack}
-        className="flex items-center gap-2 text-gray-500 hover:text-brand transition-colors mb-6 font-medium group"
+        className="flex items-center gap-2 text-ink-soft hover:text-brand transition-colors mb-6 font-medium group"
       >
         <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
         Volver al Dashboard
@@ -338,7 +338,7 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Player Area */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-2xl overflow-hidden shadow-2xl shadow-gray-200/50 border border-gray-100">
+          <div className="bg-bg rounded-[3px] overflow-hidden shadow-2xl shadow-ink/10/50 border border-rule">
             <div className="aspect-video bg-black relative">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -361,18 +361,18 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
 
             <div className="p-8">
               <div className="flex items-center gap-3 mb-4">
-                <span className="bg-brand/10 text-brand px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-[0.15em] border border-brand/10">
+                <span className="bg-brand/10 text-brand px-4 py-1.5 rounded-[3px] text-[10px] font-black uppercase tracking-[0.15em] border border-brand/10">
                   Capítulo {currentChapterIndex + 1} de {chapters.length}
                 </span>
               </div>
-              <h1 className="text-3xl font-display font-bold text-gray-900 mb-6">{currentChapter.title}</h1>
+              <h1 className="text-3xl  font-bold text-ink-strong mb-6">{currentChapter.title}</h1>
               
               <div className="prose prose-brand max-w-none">
-                <div className="flex items-center gap-2 text-gray-400 mb-4">
+                <div className="flex items-center gap-2 text-ink-mute mb-4">
                   <BookText size={18} />
                   <span className="text-sm font-bold uppercase tracking-widest">Material de Lectura</span>
                 </div>
-                <p className="text-gray-600 text-lg leading-relaxed whitespace-pre-wrap bg-gray-50/50 p-8 rounded-xl border border-gray-100">
+                <p className="text-ink-soft text-lg leading-relaxed whitespace-pre-wrap bg-bg-alt/50 p-8 rounded-[3px] border border-rule">
                   {currentChapter.text || "No hay texto adicional para este capítulo."}
                 </p>
               </div>
@@ -382,10 +382,10 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
 
         {/* Sidebar: Chapters List & Progress */}
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-xl shadow-gray-100">
-            <h2 className="text-lg font-display font-black text-gray-900 mb-8 flex items-center justify-between uppercase tracking-tighter">
+          <div className="bg-bg rounded-[3px] p-8 border border-rule shadow-xl shadow-ink/5">
+            <h2 className="text-lg  font-black text-ink-strong mb-8 flex items-center justify-between uppercase tracking-tighter">
               Contenido
-              <span className="text-xs font-black text-gray-300 tracking-widest">{course.duration}</span>
+              <span className="text-xs font-black text-ink-mute tracking-widest">{course.duration}</span>
             </h2>
 
             <div className="space-y-3">
@@ -393,14 +393,14 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
                 <button
                   key={chapter.id}
                   onClick={() => setCurrentChapterIndex(index)}
-                  className={`w-full text-left p-4 rounded-xl transition-all flex items-center gap-4 group relative ${
+                  className={`w-full text-left p-4 rounded-[3px] transition-all flex items-center gap-4 group relative ${
                     currentChapterIndex === index 
                       ? 'bg-brand text-white shadow-xl shadow-brand/20 scale-[1.02]'
-                      : 'bg-gray-50/50 text-gray-500 hover:bg-gray-100 border border-transparent hover:border-gray-200'
+                      : 'bg-bg-alt/50 text-ink-soft hover:bg-bg-soft border border-transparent hover:border-rule'
                   }`}
                 >
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-black text-xs shrink-0 ${
-                    currentChapterIndex === index ? 'bg-white/20' : 'bg-white shadow-sm border border-gray-100'
+                  <div className={`w-10 h-10 rounded-[3px] flex items-center justify-center font-black text-xs shrink-0 ${
+                    currentChapterIndex === index ? 'bg-bg/20' : 'bg-bg shadow-sm border border-rule'
                   }`}>
                     {completedChapters.includes(chapter.id) ? (
                       <CheckCircle className={currentChapterIndex === index ? 'text-white' : 'text-green-500'} size={18} />
@@ -409,7 +409,7 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-bold truncate ${currentChapterIndex === index ? 'text-white' : 'text-gray-900'}`}>
+                    <p className={`text-sm font-bold truncate ${currentChapterIndex === index ? 'text-white' : 'text-ink-strong'}`}>
                       {chapter.title}
                     </p>
                   </div>
@@ -422,12 +422,12 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
               ))}
             </div>
 
-            <div className="mt-8 pt-8 border-t border-gray-100">
+            <div className="mt-8 pt-8 border-t border-rule">
               <div
-                className={`w-full flex items-center justify-center gap-3 py-4 rounded-lg font-bold ${
+                className={`w-full flex items-center justify-center gap-3 py-4 rounded-[3px] font-bold ${
                   isCourseFinished
                     ? 'bg-green-50 text-green-600'
-                    : 'bg-gray-50 text-gray-500'
+                    : 'bg-bg-alt text-ink-soft'
                 }`}
               >
                 {isCourseFinished ? (
@@ -443,16 +443,16 @@ export default function VideoPlayer({ course, onBack }: VideoPlayerProps) {
                 )}
               </div>
               {!isCourseFinished && (
-                <p className="text-xs text-gray-400 text-center mt-3">
+                <p className="text-xs text-ink-mute text-center mt-3">
                   Termina cada vídeo para completar el curso automáticamente.
                 </p>
               )}
             </div>
           </div>
 
-          <div className="bg-gray-900 text-white p-8 rounded-2xl shadow-2xl shadow-gray-200">
-            <h3 className="font-display font-black mb-3 uppercase tracking-wider text-xs text-gray-500">Sobre este curso</h3>
-            <p className="text-sm text-gray-400 leading-relaxed mb-4">
+          <div className="bg-ink-strong text-white p-8 rounded-[3px] shadow-2xl shadow-ink/10">
+            <h3 className=" font-black mb-3 uppercase tracking-wider text-xs text-ink-soft">Sobre este curso</h3>
+            <p className="text-sm text-ink-mute leading-relaxed mb-4">
               {course.description}
             </p>
             <div className="flex items-center gap-2 text-xs font-bold text-brand">

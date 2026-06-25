@@ -48,10 +48,10 @@ export default function ProfileView({ userId }: ProfileViewProps) {
 
   if (loading) {
     return <div className="animate-pulse space-y-8">
-      <div className="h-40 bg-gray-100 rounded-xl" />
+      <div className="h-40 bg-bg-soft rounded-[3px]" />
       <div className="grid grid-cols-2 gap-6">
-        <div className="h-24 bg-gray-100 rounded-lg" />
-        <div className="h-24 bg-gray-100 rounded-lg" />
+        <div className="h-24 bg-bg-soft rounded-[3px]" />
+        <div className="h-24 bg-bg-soft rounded-[3px]" />
       </div>
     </div>;
   }
@@ -89,23 +89,23 @@ export default function ProfileView({ userId }: ProfileViewProps) {
         {/* Pending Section */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 mb-6">
-            <Clock className="text-gray-400" size={20} />
-            <h2 className="text-xl font-display font-bold text-gray-900">Pendientes de Terminar</h2>
+            <Clock className="text-ink-mute" size={20} />
+            <h2 className="text-xl  font-bold text-ink-strong">Pendientes de Terminar</h2>
           </div>
           
           <div className="space-y-3">
             {pendingCourses.length > 0 ? (
               pendingCourses.map(course => (
-                <div key={course.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between group">
+                <div key={course.id} className="bg-bg p-4 rounded-[3px] border border-rule shadow-sm flex items-center justify-between group">
                   <div>
-                    <h3 className="font-bold text-gray-900 group-hover:text-brand transition-colors">{course.title}</h3>
-                    <p className="text-xs text-gray-500 font-medium">{course.category} • {course.duration}</p>
+                    <h3 className="font-bold text-ink-strong group-hover:text-brand transition-colors">{course.title}</h3>
+                    <p className="text-xs text-ink-soft font-medium">{course.category} • {course.duration}</p>
                   </div>
                   <div className="w-2 h-2 rounded-full bg-brand" />
                 </div>
               ))
             ) : (
-              <p className="text-gray-500 italic text-sm py-4">¡Enhorabuena! Has completado todos los cursos.</p>
+              <p className="text-ink-soft italic text-sm py-4">¡Enhorabuena! Has completado todos los cursos.</p>
             )}
           </div>
         </section>
@@ -113,23 +113,23 @@ export default function ProfileView({ userId }: ProfileViewProps) {
         {/* Completed Section with Timeline vibe */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 mb-6">
-            <Award className="text-gray-400" size={20} />
-            <h2 className="text-xl font-display font-bold text-gray-900">Historial de Formación</h2>
+            <Award className="text-ink-mute" size={20} />
+            <h2 className="text-xl  font-bold text-ink-strong">Historial de Formación</h2>
           </div>
 
-          <div className="space-y-4 border-l-2 border-gray-100 ml-3 pl-6">
+          <div className="space-y-4 border-l-2 border-rule ml-3 pl-6">
             {completedCourses.length > 0 ? (
               completedCourses.map(course => (
                 <div key={course.id} className="relative">
-                  <div className="absolute -left-8 top-1.5 w-4 h-4 rounded-full bg-green-500 border-4 border-gray-50" />
-                  <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                    <h3 className="font-bold text-gray-900">{course.title}</h3>
+                  <div className="absolute -left-8 top-1.5 w-4 h-4 rounded-full bg-green-500 border-4 border-rule-soft" />
+                  <div className="bg-bg p-4 rounded-[3px] border border-rule shadow-sm">
+                    <h3 className="font-bold text-ink-strong">{course.title}</h3>
                     <p className="text-xs font-bold text-green-600 uppercase tracking-widest mt-1">Finalizado</p>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-gray-500 italic text-sm py-4">Aún no has finalizado ningún curso.</p>
+              <p className="text-ink-soft italic text-sm py-4">Aún no has finalizado ningún curso.</p>
             )}
           </div>
         </section>
@@ -140,13 +140,13 @@ export default function ProfileView({ userId }: ProfileViewProps) {
 
 function StatCard({ icon, label, value }: { icon: ReactNode, label: string, value: string }) {
   return (
-    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center gap-6">
-      <div className="w-14 h-14 bg-gray-50 rounded-lg flex items-center justify-center">
+    <div className="bg-bg p-6 rounded-[3px] border border-rule shadow-sm flex items-center gap-6">
+      <div className="w-14 h-14 bg-bg-alt rounded-[3px] flex items-center justify-center">
         {icon}
       </div>
       <div>
-        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{label}</p>
-        <p className="text-3xl font-display font-bold text-gray-900">{value}</p>
+        <p className="text-xs font-bold text-ink-mute uppercase tracking-wider">{label}</p>
+        <p className="text-3xl  font-bold text-ink-strong">{value}</p>
       </div>
     </div>
   );

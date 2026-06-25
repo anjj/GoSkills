@@ -1,16 +1,33 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", sans-serif;
+  --font-sans: "Montserrat", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
   
-  --color-brand: #e40032;
-  --color-brand-hover: #c0002a;
+  --color-bg: #ffffff;
+  --color-bg-alt: #f6f7f9;
+  --color-bg-soft: #fafbfc;
+  
+  --color-ink: #313C4F;
+  --color-ink-strong: #1a2030;
+  --color-ink-soft: #4a5568;
+  --color-ink-mute: #8a929d;
+  
+  --color-rule: #e2e5ea;
+  --color-rule-soft: #eef0f3;
+  
+  --color-brand: #E40032;
+  --color-brand-soft: #f04060;
+  --color-brand-dark: #9A1212;
+  --color-brand-tint: rgba(228, 0, 50, 0.06);
+  
+  --color-accent-blue: #009DEA;
+  --color-accent-green: #1a8744;
 }
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900 font-sans antialiased;
+    @apply bg-bg text-ink font-sans antialiased leading-[1.55];
   }
 }

@@ -308,13 +308,13 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white p-12 rounded-3xl border border-gray-100 shadow-2xl shadow-gray-200/50"
+          className="bg-bg p-12 rounded-3xl border border-rule shadow-2xl shadow-ink/10/50"
         >
-          <div className="w-20 h-20 bg-gray-900 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-xl shadow-gray-200">
+          <div className="w-20 h-20 bg-ink-strong rounded-[3px] flex items-center justify-center mx-auto mb-8 shadow-xl shadow-ink/10">
             <Lock className="text-white" size={40} />
           </div>
-          <h1 className="text-2xl font-display font-bold text-center mb-2">Gestión de Cursos</h1>
-          <p className="text-gray-500 text-center mb-8">Introduce la contraseña de administrador para gestionar los cursos existentes.</p>
+          <h1 className="text-2xl  font-bold text-center mb-2">Gestión de Cursos</h1>
+          <p className="text-ink-soft text-center mb-8">Introduce la contraseña de administrador para gestionar los cursos existentes.</p>
           
           <form onSubmit={handleVerify} className="space-y-4">
             <input
@@ -323,7 +323,7 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
               placeholder="Contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-100 rounded-lg px-4 py-3 focus:bg-white focus:ring-2 focus:ring-brand outline-none transition-all text-center text-lg tracking-widest"
+              className="w-full bg-bg-alt border border-rule rounded-[3px] px-4 py-3 focus:bg-bg focus:ring-2 focus:ring-brand outline-none transition-all text-center text-lg tracking-widest"
             />
             {authError && (
               <div className="flex items-center gap-2 text-red-500 text-sm font-medium justify-center">
@@ -333,13 +333,13 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
             )}
             <button
               disabled={verifying}
-              className="w-full bg-brand hover:bg-brand/90 text-white py-4 rounded-lg font-bold transition-all shadow-lg shadow-brand/20 active:scale-[0.98]"
+              className="w-full bg-brand hover:bg-brand/90 text-white py-4 rounded-[3px] font-bold transition-all shadow-lg shadow-brand/20 active:scale-[0.98]"
             >
               {verifying ? 'Verificando...' : 'Acceder a Gestión'}
             </button>
           </form>
 
-          <div className="mt-8 pt-8 border-t border-gray-100 text-center">
+          <div className="mt-8 pt-8 border-t border-rule text-center">
             <button 
               onClick={() => onViewChange('create')}
               className="text-brand font-bold hover:underline"
@@ -360,12 +360,12 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-display font-bold text-gray-900">Gestión de Cursos</h1>
-              <p className="text-gray-500">Administra el catálogo de formación de la plataforma.</p>
+              <h1 className="text-3xl  font-bold text-ink-strong">Gestión de Cursos</h1>
+              <p className="text-ink-soft">Administra el catálogo de formación de la plataforma.</p>
             </div>
             <button
               onClick={() => onViewChange('create')}
-              className="flex items-center gap-2 bg-brand text-white px-6 py-3 rounded-lg font-bold shadow-lg shadow-brand/20 hover:bg-brand/90 transition-all"
+              className="flex items-center gap-2 bg-brand text-white px-6 py-3 rounded-[3px] font-bold shadow-lg shadow-brand/20 hover:bg-brand/90 transition-all"
             >
               <Plus size={20} />
               Crear Nuevo Curso
@@ -375,13 +375,13 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
           <div className="grid grid-cols-1 gap-4">
             {courses.length > 0 ? (
               courses.map(course => (
-                <div key={course.id} className="bg-white p-6 rounded-xl border border-gray-200 flex items-center gap-6 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="w-24 h-16 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+                <div key={course.id} className="bg-bg p-6 rounded-[3px] border border-rule flex items-center gap-6 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="w-24 h-16 rounded-[3px] bg-bg-soft overflow-hidden flex-shrink-0">
                     <img src={course.thumbnailUrl || 'https://via.placeholder.com/150'} alt="" className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-gray-900">{course.title}</h3>
+                      <h3 className="font-bold text-ink-strong">{course.title}</h3>
                       {!course.published && (
                         <span className="text-[10px] bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-black uppercase">Borrador</span>
                       )}
@@ -391,14 +391,14 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
                   <div className="flex items-center gap-2">
                     <button 
                       onClick={() => handleEditCourse(course)}
-                      className="p-3 text-gray-400 hover:text-brand hover:bg-brand/5 rounded-lg transition-all"
+                      className="p-3 text-ink-mute hover:text-brand hover:bg-brand/5 rounded-[3px] transition-all"
                     >
                       <Settings size={20} />
                     </button>
                     {isAdmin && (
                       <button 
                         onClick={() => deleteCourse(course.id)}
-                        className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                        className="p-3 text-ink-mute hover:text-red-500 hover:bg-red-50 rounded-[3px] transition-all"
                       >
                         <Trash2 size={20} />
                       </button>
@@ -407,32 +407,32 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
                 </div>
               ))
             ) : (
-              <div className="text-center py-20 bg-white rounded-xl border border-dashed border-gray-200">
+              <div className="text-center py-20 bg-bg rounded-[3px] border border-dashed border-rule">
                 <Video size={48} className="mx-auto text-gray-200 mb-4" />
-                <p className="text-gray-500">No hay cursos publicados todavía.</p>
+                <p className="text-ink-soft">No hay cursos publicados todavía.</p>
               </div>
             )}
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-lg p-8 border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between mb-10 bg-gray-50/50 p-8 rounded-2xl border border-gray-100">
+        <div className="bg-bg rounded-[3px] p-8 border border-rule shadow-sm">
+          <div className="flex items-center justify-between mb-10 bg-bg-alt/50 p-8 rounded-[3px] border border-rule">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gray-900 rounded-xl flex items-center justify-center shadow-lg shadow-gray-200">
+              <div className="w-14 h-14 bg-ink-strong rounded-[3px] flex items-center justify-center shadow-lg shadow-ink/10">
                 {editingCourseId ? <Settings className="text-white" size={28} /> : <Plus className="text-white" size={28} />}
               </div>
               <div>
-                <h1 className="text-2xl font-display font-black text-gray-900">
+                <h1 className="text-2xl  font-black text-ink-strong">
                   {editingCourseId ? 'Editar Curso' : 'Nuevo Curso'}
                 </h1>
-                <p className="text-gray-500 text-sm font-medium">
+                <p className="text-ink-soft text-sm font-medium">
                   {editingCourseId ? 'Actualiza los contenidos existentes.' : 'Define el contenido de formación.'}
                 </p>
               </div>
             </div>
             <button 
               onClick={handleCancel}
-              className="text-sm font-bold text-gray-400 hover:text-gray-900 transition-colors"
+              className="text-sm font-bold text-ink-mute hover:text-ink-strong transition-colors"
             >
               Cancelar
             </button>
@@ -443,7 +443,7 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-ink-mute flex items-center gap-2">
                   <Type size={14} /> Título del curso
                 </label>
                 <input
@@ -453,14 +453,14 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
                     setFormData({ ...formData, title: e.target.value });
                     if (errors.title) setErrors({ ...errors, title: '' });
                   }}
-                  className={`w-full bg-gray-50 border rounded-lg px-4 py-3 focus:bg-white focus:ring-2 outline-none transition-all ${
-                    errors.title ? 'border-red-500 focus:ring-red-500 bg-red-50' : 'border-gray-100 focus:ring-brand/20 focus:border-brand/30'
+                  className={`w-full bg-bg-alt border rounded-[3px] px-4 py-3 focus:bg-bg focus:ring-2 outline-none transition-all ${
+                    errors.title ? 'border-red-500 focus:ring-red-500 bg-red-50' : 'border-rule focus:ring-brand/20 focus:border-brand/30'
                   }`}
                 />
                 {errors.title && <p className="text-red-500 text-[10px] font-bold uppercase mt-1">{errors.title}</p>}
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-ink-mute flex items-center gap-2">
                   <Hash size={14} /> Categoría
                 </label>
                 <input
@@ -471,8 +471,8 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
                     setFormData({ ...formData, category: e.target.value });
                     if (errors.category) setErrors({ ...errors, category: '' });
                   }}
-                  className={`w-full bg-gray-50 border rounded-xl px-4 py-3 focus:bg-white focus:ring-2 outline-none transition-all ${
-                    errors.category ? 'border-red-500 focus:ring-red-500 bg-red-50' : 'border-gray-100 focus:ring-brand/20 focus:border-brand/30'
+                  className={`w-full bg-bg-alt border rounded-[3px] px-4 py-3 focus:bg-bg focus:ring-2 outline-none transition-all ${
+                    errors.category ? 'border-red-500 focus:ring-red-500 bg-red-50' : 'border-rule focus:ring-brand/20 focus:border-brand/30'
                   }`}
                 />
                 {errors.category && <p className="text-red-500 text-[10px] font-bold uppercase mt-1">{errors.category}</p>}
@@ -480,47 +480,47 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-ink-mute flex items-center gap-2">
                 <FileText size={14} /> Descripción General
               </label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full bg-gray-50 border border-gray-100 rounded-lg px-4 py-3 focus:bg-white focus:ring-2 focus:ring-brand/20 focus:border-brand/30 outline-none transition-all h-24 resize-none"
+                className="w-full bg-bg-alt border border-rule rounded-[3px] px-4 py-3 focus:bg-bg focus:ring-2 focus:ring-brand/20 focus:border-brand/30 outline-none transition-all h-24 resize-none"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-ink-mute flex items-center gap-2">
                   <ImageIcon size={14} /> URL de la Miniatura
                 </label>
                 <input
                   type="url"
                   value={formData.thumbnailUrl}
                   onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-lg px-4 py-3 focus:bg-white focus:ring-2 focus:ring-brand outline-none transition-all"
+                  className="w-full bg-bg-alt border border-rule rounded-[3px] px-4 py-3 focus:bg-bg focus:ring-2 focus:ring-brand outline-none transition-all"
                   placeholder="https://..."
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-ink-mute flex items-center gap-2">
                   <Clock size={14} /> Duración total
                 </label>
                 <input
                   type="text"
                   value={formData.duration}
                   onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-lg px-4 py-3 focus:bg-white focus:ring-2 focus:ring-brand outline-none transition-all"
+                  className="w-full bg-bg-alt border border-rule rounded-[3px] px-4 py-3 focus:bg-bg focus:ring-2 focus:ring-brand outline-none transition-all"
                   placeholder="Ej. 1h 30min"
                 />
               </div>
             </div>
 
-            <div className="p-6 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between">
+            <div className="p-6 bg-bg-alt rounded-[3px] border border-rule flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-gray-900">Estado de Publicación</h3>
-                <p className="text-sm text-gray-500">¿Quieres que este curso sea visible para todos los usuarios?</p>
+                <h3 className="font-bold text-ink-strong">Estado de Publicación</h3>
+                <p className="text-sm text-ink-soft">¿Quieres que este curso sea visible para todos los usuarios?</p>
               </div>
               <button
                 type="button"
@@ -530,7 +530,7 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
                 }`}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  className={`inline-block h-4 w-4 transform rounded-full bg-bg transition-transform ${
                     formData.published ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
@@ -539,17 +539,17 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
           </div>
 
           {/* Chapters Management */}
-          <div className="space-y-6 pt-10 border-t border-gray-100">
+          <div className="space-y-6 pt-10 border-t border-rule">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-xl font-display font-bold text-gray-900">Capítulos y Contenido</h2>
-                <p className="text-sm text-gray-500">Agrega el texto y vídeos específicos de cada sección.</p>
+                <h2 className="text-xl  font-bold text-ink-strong">Capítulos y Contenido</h2>
+                <p className="text-sm text-ink-soft">Agrega el texto y vídeos específicos de cada sección.</p>
               </div>
               <div className="flex flex-col items-end gap-2">
                 <button
                   type="button"
                   onClick={addChapter}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-bold hover:bg-gray-800 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-ink-strong text-white rounded-[3px] text-sm font-bold hover:bg-gray-800 transition-colors"
                 >
                   <Plus size={16} />
                   Nuevo Capítulo
@@ -559,7 +559,7 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
             </div>
 
             {uploadError && (
-              <div className="p-4 bg-red-50 text-red-700 rounded-lg border border-red-200 text-sm mb-6">
+              <div className="p-4 bg-red-50 text-red-700 rounded-[3px] border border-red-200 text-sm mb-6">
                 <div className="flex justify-between items-start mb-2">
                   <span className="font-bold flex items-center gap-2"><AlertCircle size={16}/> Error de red (Falta configurar CORS en S3)</span>
                   <button type="button" onClick={() => setUploadError(null)} className="text-red-500 hover:text-red-700">✕</button>
@@ -570,18 +570,18 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
 
             <div className="space-y-8">
               {chapters.map((chapter, index) => (
-                <div key={index} className="bg-gray-50 rounded-xl p-6 border border-gray-100 relative group">
+                <div key={index} className="bg-bg-alt rounded-[3px] p-6 border border-rule relative group">
                   <button
                     type="button"
                     onClick={() => removeChapter(index)}
-                    className="absolute top-4 right-4 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                    className="absolute top-4 right-4 p-2 text-ink-mute hover:text-red-500 hover:bg-red-50 rounded-[3px] transition-all opacity-0 group-hover:opacity-100"
                   >
                     <Trash2 size={18} />
                   </button>
 
                   <div className="grid grid-cols-1 gap-6">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Título del Capítulo {index + 1}</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-ink-mute">Título del Capítulo {index + 1}</label>
                       <input
                         type="text"
                         value={chapter.title}
@@ -593,8 +593,8 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
                             setErrors(newErrs);
                           }
                         }}
-                        className={`w-full bg-white border rounded-lg px-4 py-3 focus:ring-2 outline-none ${
-                          errors[`chapter_${index}_title`] ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-brand'
+                        className={`w-full bg-bg border rounded-[3px] px-4 py-3 focus:ring-2 outline-none ${
+                          errors[`chapter_${index}_title`] ? 'border-red-500 focus:ring-red-500' : 'border-rule focus:ring-brand'
                         }`}
                         placeholder="Ej. Introducción al concepto"
                       />
@@ -604,17 +604,17 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Texto / Transcripción</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-ink-mute">Texto / Transcripción</label>
                       <textarea
                         value={chapter.text}
                         onChange={(e) => updateChapter(index, 'text', e.target.value)}
-                        className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand outline-none h-32 resize-none"
+                        className="w-full bg-bg border border-rule rounded-[3px] px-4 py-3 focus:ring-2 focus:ring-brand outline-none h-32 resize-none"
                         placeholder="Contenido teórico del capítulo..."
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 flex justify-between">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-ink-mute flex justify-between">
                         <span>Vídeo del Capítulo (.webm)</span>
                         {chapter.videoUrl && <span className="text-green-600">✓ Listo</span>}
                       </label>
@@ -631,16 +631,16 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
                                 setErrors(newErrs);
                               }
                             }}
-                            className={`w-full bg-white border rounded-lg px-4 py-3 pr-12 focus:ring-2 outline-none text-sm ${
-                              errors[`chapter_${index}_video`] ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-brand'
+                            className={`w-full bg-bg border rounded-[3px] px-4 py-3 pr-12 focus:ring-2 outline-none text-sm ${
+                              errors[`chapter_${index}_video`] ? 'border-red-500 focus:ring-red-500' : 'border-rule focus:ring-brand'
                             }`}
                             placeholder="URL del vídeo o sube uno -->"
                           />
-                          <Video className="absolute right-4 top-3.5 text-gray-300" size={16} />
+                          <Video className="absolute right-4 top-3.5 text-ink-mute" size={16} />
                         </div>
                         
-                        <label className={`cursor-pointer w-12 h-12 flex items-center justify-center rounded-lg transition-all ${
-                          uploadingChapterIndex === index ? 'bg-gray-200' : 'bg-gray-900 hover:bg-gray-800 text-white hover:scale-105 active:scale-95'
+                        <label className={`cursor-pointer w-12 h-12 flex items-center justify-center rounded-[3px] transition-all ${
+                          uploadingChapterIndex === index ? 'bg-gray-200' : 'bg-ink-strong hover:bg-gray-800 text-white hover:scale-105 active:scale-95'
                         }`}>
                           <input
                             type="file"
@@ -678,7 +678,7 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-5 rounded-lg font-bold transition-all shadow-xl flex items-center justify-center gap-3 active:scale-[0.98] ${
+            className={`w-full py-5 rounded-[3px] font-bold transition-all shadow-xl flex items-center justify-center gap-3 active:scale-[0.98] ${
               success 
                 ? 'bg-green-500 text-white' 
                 : 'bg-brand text-white hover:bg-brand/90 shadow-brand/20'

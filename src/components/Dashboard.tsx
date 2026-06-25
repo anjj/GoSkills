@@ -35,9 +35,9 @@ export default function Dashboard({ onPlay }: DashboardProps) {
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-12">
       <div className="relative">
-        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-400">
+        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-ink-mute">
           <Search size={20} />
         </div>
         <input
@@ -45,30 +45,30 @@ export default function Dashboard({ onPlay }: DashboardProps) {
           placeholder="Busca cursos por título o categoría..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-white border border-gray-100 rounded-xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-brand/20 focus:border-brand/30 transition-all outline-none text-lg shadow-xl shadow-gray-100"
+          className="w-full bg-bg border border-rule rounded-[3px] py-4 pl-12 pr-4 focus:ring-2 focus:ring-brand/20 focus:border-brand/30 transition-all outline-none text-lg shadow-xl shadow-ink/5"
         />
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
           {[1, 2, 3].map(i => (
-            <div key={i} className="bg-white rounded-lg p-4 space-y-4 animate-pulse">
-              <div className="aspect-video bg-gray-100 rounded-lg" />
-              <div className="h-6 bg-gray-100 rounded w-3/4" />
-              <div className="h-4 bg-gray-100 rounded w-1/2" />
+            <div key={i} className="bg-bg rounded-[3px] p-4 space-y-4 animate-pulse break-inside-avoid">
+              <div className="aspect-video bg-bg-soft rounded-[3px]" />
+              <div className="h-6 bg-bg-soft rounded w-3/4" />
+              <div className="h-4 bg-bg-soft rounded w-1/2" />
             </div>
           ))}
         </div>
       ) : filteredCourses.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
           {filteredCourses.map((course) => (
             <motion.div
               layoutId={course.id}
               key={course.id}
               onClick={() => course.published !== false ? onPlay(course) : null}
-              className={`bg-white rounded-2xl overflow-hidden border border-gray-100 transition-all shadow-sm ${
+              className={`bg-bg rounded-[3px] overflow-hidden border border-rule transition-all shadow-sm break-inside-avoid mb-6 ${
                 course.published !== false 
-                  ? 'hover:shadow-2xl hover:shadow-brand/10 cursor-pointer group'
+                  ? 'hover:shadow-2xl hover:shadow-brand/10 cursor-pointer group hover:-translate-y-1'
                   : 'opacity-75 cursor-not-allowed'
               }`}
             >
@@ -79,25 +79,25 @@ export default function Dashboard({ onPlay }: DashboardProps) {
                   className={`w-full h-full object-cover transition-transform duration-500 ${course.published !== false ? 'group-hover:scale-105' : ''}`}
                 />
                 <div className="absolute top-4 left-4 flex gap-2">
-                  <div className="bg-white/90 backdrop-blur px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-brand shadow-sm">
+                  <div className="bg-bg/90 backdrop-blur px-3 py-1.5 rounded-[3px] text-[10px] font-black uppercase tracking-widest text-brand shadow-sm">
                     {course.category}
                   </div>
                   {course.published === false && (
-                    <div className="bg-yellow-500 text-white px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider shadow-sm">
+                    <div className="bg-yellow-500 text-white px-2 py-1 rounded-[3px] text-[10px] font-bold uppercase tracking-wider shadow-sm">
                       Próximamente
                     </div>
                   )}
                 </div>
               </div>
               <div className="p-5">
-                <h3 className={`text-lg font-display font-bold text-gray-900 transition-colors line-clamp-1 mb-2 ${course.published !== false ? 'group-hover:text-brand' : ''}`}>
+                <h3 className={`text-lg  font-bold text-ink-strong transition-colors line-clamp-1 mb-2 ${course.published !== false ? 'group-hover:text-brand' : ''}`}>
                   {course.title}
                 </h3>
-                <p className="text-gray-500 text-sm line-clamp-2 mb-4 h-10">
+                <p className="text-ink-soft text-sm line-clamp-2 mb-4 h-10">
                   {course.description}
                 </p>
-                <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-                  <div className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
+                <div className="flex items-center justify-between pt-4 border-t border-rule-soft">
+                  <div className="flex items-center gap-1.5 text-xs text-ink-mute font-medium">
                     <Clock size={14} />
                     {course.duration}
                   </div>
@@ -106,7 +106,7 @@ export default function Dashboard({ onPlay }: DashboardProps) {
                       Ver video
                     </button>
                   ) : (
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                    <span className="text-xs font-bold text-ink-mute uppercase tracking-widest">
                       En preparación
                     </span>
                   )}
@@ -116,12 +116,12 @@ export default function Dashboard({ onPlay }: DashboardProps) {
           ))}
         </div>
       ) : (
-        <div className="text-center py-20 bg-white rounded-xl border border-dashed border-gray-200">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-50 rounded-xl mb-4">
-            <Search className="text-gray-300" size={32} />
+        <div className="text-center py-20 bg-bg rounded-[3px] border border-dashed border-rule">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-bg-alt rounded-[3px] mb-4">
+            <Search className="text-ink-mute" size={32} />
           </div>
-          <h3 className="text-lg font-bold text-gray-900">No encontramos resultados</h3>
-          <p className="text-gray-500">Intenta con otros términos de búsqueda.</p>
+          <h3 className="text-lg font-bold text-ink-strong">No encontramos resultados</h3>
+          <p className="text-ink-soft">Intenta con otros términos de búsqueda.</p>
         </div>
       )}
     </div>
