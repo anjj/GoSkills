@@ -343,12 +343,28 @@ describe('AdminPanel - file upload', () => {
   });
 
   it('uploads a valid video and updates the chapter URL', async () => {
+    // 1. Mock fetch for the pre-signed URL step
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn().mockImplementation(async (url: string) => {
+      if (url === '/api/upload/presign') {
+        return {
+          ok: true,
+          json: async () => ({
+            presignedUrl: 'https://fake-s3-presigned-url.com',
+            fileUrl: 'https://uploaded.example/x.mp4'
+          })
+        };
+      }
+      return originalFetch(url);
+    });
+
     type XhrInstance = {
       upload: { onprogress: ((e: any) => void) | null };
       onload: ((this: any) => void) | null;
       onerror: ((this: any) => void) | null;
       open: ReturnType<typeof vi.fn>;
       send: ReturnType<typeof vi.fn>;
+      setRequestHeader: ReturnType<typeof vi.fn>;
       status: number;
       responseText: string;
       statusText: string;
@@ -360,8 +376,9 @@ describe('AdminPanel - file upload', () => {
       this.onerror = null;
       this.open = vi.fn();
       this.send = vi.fn();
+      this.setRequestHeader = vi.fn();
       this.status = 200;
-      this.responseText = JSON.stringify({ fileUrl: 'https://uploaded.example/x.mp4', key: 'k' });
+      this.responseText = '';
       this.statusText = 'OK';
       xhrInstances.push(this);
     }
@@ -387,6 +404,7 @@ describe('AdminPanel - file upload', () => {
     });
 
     (window as any).XMLHttpRequest = originalXhr;
+    global.fetch = originalFetch;
   });
 
 });

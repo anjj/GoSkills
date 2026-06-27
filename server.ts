@@ -9,7 +9,6 @@ import dotenv from "dotenv";
 import crypto from "crypto";
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import multer from "multer";
 import { initializeApp, cert, applicationDefault, getApps, type App } from "firebase-admin/app";
 import { getFirestore, FieldValue, type Firestore } from "firebase-admin/firestore";
 import { getAuth, type Auth } from "firebase-admin/auth";
@@ -162,21 +161,12 @@ export function createApp(): Express {
     res.json({ allowed: isAllowed });
   });
 
-  const storage = multer.memoryStorage();
-  const upload = multer({
-    storage,
-    limits: {
-      fileSize: 100 * 1024 * 1024, // 100MB limit
-    }
-  });
+  // API Route to get an S3 pre-signed URL for direct client upload
+  app.post("/api/upload/presign", async (req, res) => {
+    const { courseName, fileName, fileType } = req.body;
 
-  // API Route to Upload using Node.js proxy to avoid S3 browser CORS
-  app.post("/api/upload", upload.single("file"), async (req, res) => {
-    const file = req.file;
-    const courseName = req.body.courseName;
-
-    if (!file || !courseName) {
-      return res.status(400).json({ error: "Missing required fields (file or courseName)" });
+    if (!courseName || !fileName || !fileType) {
+      return res.status(400).json({ error: "Missing required fields (courseName, fileName, or fileType)" });
     }
 
     const { AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_S3_BUCKET } = process.env;
@@ -195,24 +185,23 @@ export function createApp(): Express {
       });
 
       const safeCourseName = courseName.replace(/[^a-zA-Z0-9-_\.]/g, "-").toLowerCase();
-      const safeFileName = file.originalname.replace(/[^a-zA-Z0-9-_\.]/g, "-");
+      const safeFileName = fileName.replace(/[^a-zA-Z0-9-_\.]/g, "-");
       const key = `${safeCourseName}/${Date.now()}-${safeFileName}`;
 
       const command = new PutObjectCommand({
         Bucket: AWS_S3_BUCKET,
         Key: key,
-        Body: file.buffer,
-        ContentType: file.mimetype,
+        ContentType: fileType,
       });
 
-      await s3Client.send(command);
-      
+      // Pre-signed URL valid for 1 hour
+      const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
       const fileUrl = `https://${AWS_S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/${key}`;
 
-      res.json({ fileUrl, key });
+      res.json({ presignedUrl, fileUrl, key });
     } catch (error) {
-      console.error("Error uploading file to S3:", error);
-      res.status(500).json({ error: "Failed to upload file" });
+      console.error("Error generating write presigned URL:", error);
+      res.status(500).json({ error: "Failed to generate presigned URL for upload" });
     }
   });
 

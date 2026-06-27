@@ -138,10 +138,27 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
     setUploadProgress(0);
 
     try {
-      const formDataUpload = new FormData();
-      formDataUpload.append("file", file);
-      formDataUpload.append("courseName", courseName);
+      // 1. Get pre-signed URL from server
+      const presignResponse = await fetch("/api/upload/presign", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          courseName,
+          fileName: file.name,
+          fileType: file.type,
+        }),
+      });
 
+      if (!presignResponse.ok) {
+        const errorData = await presignResponse.json();
+        throw new Error(errorData.error || "Failed to get presigned URL");
+      }
+
+      const { presignedUrl, fileUrl } = await presignResponse.json();
+
+      // 2. Upload file directly to S3 using the pre-signed URL
       return new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         
@@ -154,22 +171,16 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
 
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-              const response = JSON.parse(xhr.responseText);
-              const newChapters = [...chapters];
-              newChapters[index].videoUrl = response.fileUrl;
-              setChapters(newChapters);
-              setUploadingChapterIndex(null);
-              setUploadProgress(0);
-              resolve();
-            } catch (err) {
-              setUploadingChapterIndex(null);
-              reject(new Error("Error parsing server response"));
-            }
+            const newChapters = [...chapters];
+            newChapters[index].videoUrl = fileUrl;
+            setChapters(newChapters);
+            setUploadingChapterIndex(null);
+            setUploadProgress(0);
+            resolve();
           } else {
             console.error("Upload error status:", xhr.statusText, xhr.responseText);
             setUploadingChapterIndex(null);
-            reject(new Error(`Upload failed: ${xhr.responseText}`));
+            reject(new Error(`Upload failed: ${xhr.statusText}`));
           }
         };
 
@@ -179,8 +190,10 @@ export default function AdminPanel({ isAdmin, setIsAdmin, view, onViewChange }: 
           reject(new Error("Network error during upload"));
         };
 
-        xhr.open("POST", "/api/upload");
-        xhr.send(formDataUpload);
+        xhr.open("PUT", presignedUrl);
+        // Important: Set the exact Content-Type that was used to generate the signature
+        xhr.setRequestHeader("Content-Type", file.type);
+        xhr.send(file);
       });
 
     } catch (error: any) {
