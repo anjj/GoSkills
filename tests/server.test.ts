@@ -251,7 +251,7 @@ describe('POST /api/auth/verify-domain', () => {
   });
 });
 
-describe('POST /api/upload', () => {
+describe('POST /api/upload/presign', () => {
   beforeEach(() => {
     process.env.AWS_REGION = 'us-east-1';
     process.env.AWS_ACCESS_KEY_ID = 'AKIA';
@@ -259,60 +259,55 @@ describe('POST /api/upload', () => {
     process.env.AWS_S3_BUCKET = 'my-bucket';
   });
 
-  it('returns 400 when file is missing', async () => {
+  it('returns 400 when fields are missing', async () => {
     const app = createApp();
     const res = await request(app)
-      .post('/api/upload')
-      .field('courseName', 'My Course');
+      .post('/api/upload/presign')
+      .send({ courseName: 'My Course' });
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/Missing required fields/);
-  });
-
-  it('returns 400 when courseName is missing', async () => {
-    const app = createApp();
-    const res = await request(app)
-      .post('/api/upload')
-      .attach('file', Buffer.from('hello'), { filename: 'test.mp4', contentType: 'video/mp4' });
-    expect(res.status).toBe(400);
   });
 
   it('returns 500 when AWS env vars are missing', async () => {
     delete process.env.AWS_REGION;
     const app = createApp();
     const res = await request(app)
-      .post('/api/upload')
-      .field('courseName', 'My Course')
-      .attach('file', Buffer.from('hello'), { filename: 'test.mp4', contentType: 'video/mp4' });
+      .post('/api/upload/presign')
+      .send({ courseName: 'My Course', fileName: 'test.mp4', fileType: 'video/mp4' });
     expect(res.status).toBe(500);
     expect(res.body.error).toMatch(/AWS credentials/);
   });
 
-  it('uploads file to S3 and returns the file URL', async () => {
-    sendMock.mockResolvedValueOnce({});
+  it('returns a pre-signed URL and file URL', async () => {
+    getSignedUrlMock.mockResolvedValueOnce('https://presigned.s3.amazonaws.com/test-upload');
     const app = createApp();
     const res = await request(app)
-      .post('/api/upload')
-      .field('courseName', 'My Cool Course!')
-      .attach('file', Buffer.from('video bytes'), { filename: 'My Video.mp4', contentType: 'video/mp4' });
+      .post('/api/upload/presign')
+      .send({ courseName: 'My Cool Course!', fileName: 'My Video.mp4', fileType: 'video/mp4' });
 
     expect(res.status).toBe(200);
-    expect(sendMock).toHaveBeenCalledTimes(1);
+    expect(res.body).toHaveProperty('presignedUrl');
+    expect(res.body).toHaveProperty('fileUrl');
+    expect(res.body).toHaveProperty('key');
+    expect(res.body.presignedUrl).toBe('https://presigned.s3.amazonaws.com/test-upload');
     expect(res.body.fileUrl).toMatch(
       /^https:\/\/my-bucket\.s3\.us-east-1\.amazonaws\.com\/my-cool-course-\/\d+-My-Video\.mp4$/
     );
     expect(res.body.key).toMatch(/^my-cool-course-\/\d+-My-Video\.mp4$/);
   });
 
-  it('returns 500 when S3 send throws', async () => {
-    sendMock.mockRejectedValueOnce(new Error('S3 down'));
+  it('returns 500 when pre-signing throws', async () => {
+    getSignedUrlMock.mockRejectedValueOnce(new Error('boom'));
+
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
     const app = createApp();
     const res = await request(app)
-      .post('/api/upload')
-      .field('courseName', 'X')
-      .attach('file', Buffer.from('x'), { filename: 'a.mp4', contentType: 'video/mp4' });
+      .post('/api/upload/presign')
+      .send({ courseName: 'X', fileName: 'a.mp4', fileType: 'video/mp4' });
+
     expect(res.status).toBe(500);
-    expect(res.body.error).toBe('Failed to upload file');
+    expect(res.body.error).toBe('Failed to generate presigned URL for upload');
     errorSpy.mockRestore();
   });
 });
