@@ -50,6 +50,16 @@ vi.mock('../src/components/VideoPlayer', () => ({
   ),
 }));
 
+vi.mock('../src/components/LandingPage', () => ({
+  default: ({ onLogin, authError }: any) => (
+    <div data-testid="landing-page">
+      Landing Page
+      <button onClick={onLogin}>Acceso con Microsoft</button>
+      {authError && <div>{authError}</div>}
+    </div>
+  ),
+}));
+
 import App from '../src/App';
 
 beforeEach(() => {

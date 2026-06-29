@@ -12,6 +12,7 @@ import Dashboard from './components/Dashboard';
 import ProfileView from './components/ProfileView';
 import AdminPanel from './components/AdminPanel';
 import VideoPlayer from './components/VideoPlayer';
+import LandingPage from './components/LandingPage';
 import { Course } from './types';
 
 type View = 'dashboard' | 'profile' | 'admin' | 'player';
@@ -134,46 +135,7 @@ export default function App() {
   }
 
   if (!user) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50/50 px-4">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center max-w-md w-full bg-white p-12 rounded-3xl shadow-2xl shadow-brand/5 border border-gray-100"
-          id="login-container"
-        >
-          <div className="flex justify-center mb-10" id="logo-container">
-            <img src="/logo.png" alt="golive" className="h-16 w-auto object-contain" />
-          </div>
-          <p className="text-gray-500 mb-10 text-lg max-w-sm mx-auto leading-relaxed font-medium">
-            making life easier.
-          </p>
-          <div className="space-y-4">
-            <button
-              onClick={handleMicrosoftSignIn}
-              className="w-full flex items-center justify-center gap-3 bg-gray-900 hover:bg-black text-white py-4 px-6 rounded-xl font-bold transition-all shadow-xl shadow-gray-200 active:scale-[0.98] hover:scale-[1.02]"
-            >
-              <MicrosoftIcon />
-              Acceso con Microsoft
-            </button>
-          </div>
-
-          {authError && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              className="mt-4 p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-medium"
-            >
-              {authError}
-            </motion.div>
-          )}
-
-          <p className="mt-8 text-xs text-gray-400 uppercase tracking-widest font-medium">
-            Solo cuentas corporativas
-          </p>
-        </motion.div>
-      </div>
-    );
+    return <LandingPage onLogin={handleMicrosoftSignIn} authError={authError} />;
   }
 
   return (
