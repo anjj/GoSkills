@@ -12,7 +12,7 @@ import Dashboard from './components/Dashboard';
 import ProfileView from './components/ProfileView';
 import AdminPanel from './components/AdminPanel';
 import VideoPlayer from './components/VideoPlayer';
-import LandingPage from './components/LandingPage';
+import { LandingPage } from './components/LandingPage';
 import { Course } from './types';
 
 type View = 'dashboard' | 'profile' | 'admin' | 'player';

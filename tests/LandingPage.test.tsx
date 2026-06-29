@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import LandingPage from '../src/components/LandingPage';
+import { LandingPage } from '../src/components/LandingPage';
 
 describe('LandingPage', () => {
   it('renders the landing page basic layout', () => {

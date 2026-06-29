@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 
-function MicrosoftIcon({ className = "w-5 h-5" }: { className?: string }) {
+function MicrosoftIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
     <svg viewBox="0 0 21 21" className={className} xmlns="http://www.w3.org/2000/svg">
       <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
@@ -12,7 +12,7 @@ function MicrosoftIcon({ className = "w-5 h-5" }: { className?: string }) {
   );
 }
 
-export default function LandingPage({ onLogin, authError }: { onLogin: () => void, authError?: string | null }) {
+export function LandingPage({ onLogin, authError }: { onLogin: () => void, authError?: string | null }) {
   return (
     <div data-testid="landing-page-container" className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 space-y-16 overflow-hidden relative">
       {/* Background decoration */}

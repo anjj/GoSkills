@@ -51,7 +51,7 @@ vi.mock('../src/components/VideoPlayer', () => ({
 }));
 
 vi.mock('../src/components/LandingPage', () => ({
-  default: ({ onLogin, authError }: any) => (
+  LandingPage: ({ onLogin, authError }: any) => (
     <div data-testid="landing-page">
       Landing Page
       <button onClick={onLogin}>Acceso con Microsoft</button>
