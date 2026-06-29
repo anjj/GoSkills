@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import LandingPage from '../src/components/LandingPage';
 
@@ -23,6 +23,16 @@ describe('LandingPage', () => {
     render(<LandingPage onLogin={() => {}} />);
     expect(screen.getByText(/El "Udemy" para tus guías corporativas/i)).toBeInTheDocument();
     expect(screen.getByText(/Explora píldoras de video/i)).toBeInTheDocument();
+  });
+
+  it('renders the Login Call-to-Action and triggers onLogin', () => {
+    const onLoginMock = vi.fn();
+    render(<LandingPage onLogin={onLoginMock} />);
+    const loginButton = screen.getByRole('button', { name: /Acceso con Microsoft/i });
+    expect(loginButton).toBeInTheDocument();
+    
+    loginButton.click();
+    expect(onLoginMock).toHaveBeenCalledTimes(1);
   });
 });
 
