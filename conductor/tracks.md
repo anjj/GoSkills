@@ -9,5 +9,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [~] **Track: Landing Page (Pre-Login Welcome Page)**
+- [x] **Track: Landing Page (Pre-Login Welcome Page)**
 *Link: [./tracks/landing_page_20260629/](./tracks/landing_page_20260629/)*
