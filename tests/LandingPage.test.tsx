@@ -12,4 +12,17 @@ describe('LandingPage', () => {
     // Let's check for a specific data-testid to represent the basic layout
     expect(screen.getByTestId('landing-page-container')).toBeInTheDocument();
   });
+
+  it('renders the Hero section with a welcoming header', () => {
+    render(<LandingPage onLogin={() => {}} />);
+    expect(screen.getByRole('heading', { name: /Bienvenido a GoSkills/i })).toBeInTheDocument();
+    expect(screen.getByText(/La plataforma de conocimiento/i)).toBeInTheDocument();
+  });
+
+  it('renders the Product Explanation section', () => {
+    render(<LandingPage onLogin={() => {}} />);
+    expect(screen.getByText(/El "Udemy" para tus guías corporativas/i)).toBeInTheDocument();
+    expect(screen.getByText(/Explora píldoras de video/i)).toBeInTheDocument();
+  });
 });
+
