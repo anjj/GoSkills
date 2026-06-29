@@ -47,7 +47,10 @@ function getAdminApp(): App {
       console.log('[firebase-admin] Initialized successfully with service account credentials');
     } else {
       console.warn('[firebase-admin] FIREBASE_SERVICE_ACCOUNT not set — falling back to Application Default Credentials');
-      adminApp = initializeApp({ credential: applicationDefault() });
+      adminApp = initializeApp({ 
+        credential: applicationDefault(),
+        projectId: process.env.FIREBASE_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT
+      });
     }
   } catch (err) {
     console.error('[firebase-admin] INITIALIZATION FAILED:', err instanceof Error ? err.message : err);
@@ -108,7 +111,10 @@ export function createApp(): Express {
     const idToken = match[1];
 
     const { password } = req.body;
-    const adminPassword = process.env.ADMIN_ACCESS;
+    let adminPassword = process.env.ADMIN_ACCESS?.trim();
+    if (adminPassword && adminPassword.startsWith('"') && adminPassword.endsWith('"')) {
+      adminPassword = adminPassword.slice(1, -1);
+    }
 
     if (!adminPassword) {
       return res.status(500).json({ error: "ADMIN_ACCESS not configured in server" });
@@ -124,6 +130,8 @@ export function createApp(): Express {
         await getAdminAuth().setCustomUserClaims(decoded.uid, { admin: true });
         res.json({ success: true, message: "Acceso concedido" });
       } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error('[admin] verifyIdToken failed — message:', msg);
         return res.status(401).json({ success: false, message: "Token inválido" });
       }
     } else {

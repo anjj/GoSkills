@@ -8,3 +8,5 @@ certs/
 .env*
 !.env.example
 firebase-applet-config.json
+
+graphify-out/
