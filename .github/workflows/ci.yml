@@ -140,14 +140,15 @@ jobs:
         service_account: ${{ env.SERVICE_ACCOUNT }}
         project_id: ${{ env.PROJECT_ID }}
 
-    - name: Minify Firebase Service Account
+    - name: Prepare Firebase Service Account
       id: minify
       env:
         FSA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
       run: |
-        MINIFIED=$(echo "$FSA" | jq -c .)
-        echo "::add-mask::$MINIFIED"
-        echo "fsa=$MINIFIED" >> $GITHUB_OUTPUT
+        # Base64 encode the JSON secret to avoid ALL shell parsing issues (commas, newlines, quotes)
+        B64=$(echo -n "$FSA" | base64 -w 0)
+        echo "::add-mask::$B64"
+        echo "fsa_b64=$B64" >> $GITHUB_OUTPUT
 
     - name: Deploy to Google Cloud Run
       uses: google-github-actions/deploy-cloudrun@v2
@@ -170,4 +171,4 @@ jobs:
           FIREBASE_DATABASE_URL=${{ secrets.VITE_FIREBASE_DATABASE_URL }}
           FIREBASE_AUTH_PROXY_TARGET=${{ secrets.FIREBASE_AUTH_PROXY_TARGET }}
           FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}
-          FIREBASE_SERVICE_ACCOUNT=${{ steps.minify.outputs.fsa }}
+          FIREBASE_SERVICE_ACCOUNT_BASE64=${{ steps.minify.outputs.fsa_b64 }}

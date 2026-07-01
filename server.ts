@@ -29,7 +29,11 @@ function getAdminApp(): App {
     console.log('[firebase-admin] Reusing existing app');
     return adminApp;
   }
-  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
+  let serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+    serviceAccount = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf8');
+  }
+  
   try {
     if (serviceAccount) {
       // The value in .env may be stored as a JSON-encoded string (i.e. wrapped in outer quotes),
